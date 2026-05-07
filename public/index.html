@@ -1,0 +1,1213 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FiberFlow | ODP Dashboard</title>
+    <script
+      defer
+      src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+      const Toast = Swal.mixin({
+        background: "#1e293b",
+        color: "#f8fafc",
+        confirmButtonColor: "#3b82f6",
+        cancelButtonColor: "#475569",
+        heightAuto: false, // Mencegah pergeseran layout
+        customClass: {
+          container: "swal2-front", // Kita akan beri CSS khusus untuk class ini
+          popup: "rounded-3xl border border-slate-700 shadow-2xl",
+        },
+      });
+    </script>
+    <style>
+      :root {
+        --primary: #2563eb;
+        --dark: #0f172a;
+        --bg: #f1f5f9;
+        --danger: #dc2626;
+      }
+      [x-cloak] {
+        display: none !important;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background: var(--bg);
+        margin: 0;
+        color: var(--dark);
+      }
+
+      /* Styling Form Input & Select */
+      .form-group {
+        margin-bottom: 1rem;
+      }
+      .form-group label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: #64748b;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      input[type="text"],
+      select {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #0f172a; /* Teks Biru Gelap/Hitam */
+        font-size: 0.9rem;
+        outline: none;
+        box-sizing: border-box;
+        transition: all 0.2s;
+      }
+      input:focus,
+      select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      /* Layout & Nav */
+      .glass-nav {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.8rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .main-container {
+        max-width: 1250px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+      }
+
+      /* Buttons */
+      .btn {
+        padding: 0.8rem 1.5rem;
+        border-radius: 1rem;
+        font-weight: 800;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+      }
+      .btn-primary {
+        background: var(--dark);
+        color: white;
+      }
+      .btn-cabut {
+        background: var(--danger);
+        color: white;
+        margin-right: 0.5rem;
+      }
+      .btn-excel {
+        background: #107c41;
+        color: white;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      /* Table Styles */
+      .odp-card {
+        background: white;
+        border-radius: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+      }
+      .odp-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .odp-table th {
+        padding: 1rem;
+        background: #f8fafc;
+        font-size: 0.65rem;
+        color: #64748b;
+        text-align: left;
+        text-transform: uppercase;
+        font-weight: 800;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .odp-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.85rem;
+      }
+
+      /* Port Indicators */
+      .indicator-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        display: inline-block;
+        margin: 0 1px;
+      }
+      .dot-active {
+        background: var(--primary);
+      }
+      .dot-empty {
+        background: #e2e8f0;
+      }
+
+      /* Modals */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 1rem;
+      }
+      .modal-content {
+        background: white;
+        width: 100%;
+        max-width: 600px;
+        border-radius: 2rem;
+        padding: 2.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      /* Dark Section for Ports */
+      .tech-section {
+        background: var(--dark);
+        padding: 1.5rem;
+        border-radius: 1.25rem;
+        margin-top: 1rem;
+      }
+      .tech-section h3 {
+        color: #94a3b8;
+        font-size: 0.7rem;
+        margin: 0 0 1rem 0;
+        text-transform: uppercase;
+      }
+      .dark-input {
+        background: #1e293b;
+        border: 1px solid #334155;
+        color: #f8fafc;
+        padding: 0.6rem;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .dark-input::placeholder {
+        color: #64748b;
+      }
+
+      /* Action Buttons in Table */
+      .btn-action {
+        padding: 0.4rem 0.8rem;
+        border-radius: 0.5rem;
+        font-weight: 800;
+        font-size: 0.65rem;
+        cursor: pointer;
+        border: none;
+        text-transform: uppercase;
+        margin-left: 0.2rem;
+      }
+      .btn-view {
+        background: #f1f5f9;
+        color: #475569;
+      }
+      .btn-edit {
+        background: #fffbeb;
+        color: #d97706;
+      }
+      .btn-delete {
+        background: #fef2f2;
+        color: #dc2626;
+      }
+
+      /* Memastikan SweetAlert2 berada di atas modal Form Cabut */
+      .swal2-container.swal2-front {
+        z-index: 9999 !important;
+      }
+
+      /* Opsional: Jika Anda ingin backdrop modal Form Cabut sedikit lebih gelap saat alert muncul */
+      body.swal2-shown {
+        overflow: hidden;
+      }
+
+      /* Memaksa SweetAlert2 berada di atas semua modal overlay */
+      .swal2-container {
+        z-index: 9999 !important;
+      }
+
+      /* Custom styling untuk popup agar lebih modern */
+      .modern-popup {
+        border-radius: 2rem !important;
+        background: #1e293b !important; /* Slate 800 */
+        color: #f8fafc !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      }
+
+      /* Styling Kotak Port */
+      .port-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .port-box {
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 0.8rem;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s;
+      }
+
+      .port-box:hover {
+        transform: scale(1.05);
+      }
+
+      .port-occupied {
+        background: linear-gradient(135deg, #ef4444, #991b1b); /* Merah */
+        border: 1px solid #7f1d1d;
+      }
+
+      .port-available {
+        background: linear-gradient(135deg, #22c55e, #166534); /* Hijau */
+        border: 1px solid #14532d;
+      }
+
+      .port-label {
+        font-size: 0.6rem;
+        opacity: 0.8;
+        margin-bottom: 4px;
+      }
+
+      .port-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .port-item {
+        padding: 8px;
+        border-radius: 6px;
+        text-align: center;
+        font-size: 10px;
+        font-weight: bold;
+        color: white;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+      .bg-available {
+        background: #22c55e;
+      } /* Hijau */
+      .bg-occupied {
+        background: #ef4444;
+      } /* Merah */
+
+      /* Indikator Status di Baris Tabel */
+      .status-full {
+        border-left: 4px solid #ef4444 !important;
+      }
+      .status-warning {
+        border-left: 4px solid #f59e0b !important;
+      }
+      .status-safe {
+        border-left: 4px solid #22c55e !important;
+      }
+
+      /* Badge Status */
+      .badge {
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+      .badge-red {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .badge-yellow {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .badge-green {
+        background: #dcfce7;
+        color: #166534;
+      }
+    </style>
+  </head>
+  <body x-data="odpApp()" x-init="fetchData()">
+    <nav class="glass-nav">
+      <div style="display: flex; align-items: center; gap: 1rem">
+        <div
+          style="
+            background: var(--primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+          "
+        >
+          <svg
+            width="22"
+            height="22"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+          </svg>
+        </div>
+        <h1 style="font-size: 1.2rem; margin: 0; font-weight: 900">
+          FiberFlow
+        </h1>
+      </div>
+      <div>
+        <button @click="cabutModal = true" class="btn btn-cabut">
+          FORM CABUT
+        </button>
+        <button @click="openModal()" class="btn btn-primary">+ NEW ODP</button>
+      </div>
+    </nav>
+    <div class="main-container">
+      <div
+        style="
+          display: flex;
+          gap: 1rem;
+          margin-bottom: 1.5rem;
+          align-items: flex-end;
+          flex-wrap: wrap;
+        "
+      >
+        <div style="flex: 2; min-width: 250px">
+          <label
+            style="
+              font-size: 0.65rem;
+              font-weight: 800;
+              color: #64748b;
+              display: block;
+              margin-bottom: 5px;
+            "
+            >SEARCH</label
+          >
+          <input
+            type="text"
+            x-model="searchQuery"
+            placeholder="Cari Nama ODP atau Pelanggan..."
+          />
+        </div>
+        <div style="flex: 1; min-width: 150px">
+          <label
+            style="
+              font-size: 0.65rem;
+              font-weight: 800;
+              color: #64748b;
+              display: block;
+              margin-bottom: 5px;
+            "
+            >FILTER AREA</label
+          >
+          <select x-model="filterArea">
+            <option value="">Semua Area</option>
+            <option value="EKO">EKO</option>
+            <option value="WKO">WKO</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 0.5rem">
+          <button @click="exportToExcel()" class="btn btn-excel">
+            Export XLSX
+          </button>
+          <label class="btn btn-excel" style="background: #2b5797">
+            Import XLSX
+            <input
+              type="file"
+              @change="importFromExcel($event)"
+              style="display: none"
+              accept=".xlsx, .xls"
+            />
+          </label>
+        </div>
+      </div>
+
+      <div class="odp-card">
+        <table class="odp-table">
+          <thead>
+            <tr>
+              <th>Identity</th>
+              <th>Area / Cluster</th>
+              <th style="text-align: center">In Status</th>
+              <th style="text-align: center">Out Status</th>
+              <th style="text-align: right">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="item in filteredOdps" :key="item.id">
+              <tr style="border-bottom: 1px solid #f1f5f9">
+                <td>
+                  <div
+                    style="font-weight: 900; font-size: 1rem"
+                    x-text="item.nama"
+                  ></div>
+                  <div
+                    style="
+                      color: var(--primary);
+                      font-size: 0.7rem;
+                      font-weight: 800;
+                    "
+                    x-text="item.level"
+                  ></div>
+                </td>
+                <td>
+                  <div style="font-weight: 600" x-text="item.area || '-'"></div>
+                  <div
+                    style="font-size: 0.7rem; color: #94a3b8"
+                    x-text="item.cluster || '-'"
+                  ></div>
+                </td>
+                <td style="text-align: center">
+                  <template x-for="i in 2">
+                    <div
+                      class="indicator-dot"
+                      :class="item['in'+i] ? 'dot-active' : 'dot-empty'"
+                    ></div>
+                  </template>
+                </td>
+                <td style="text-align: center">
+                  <template x-for="i in 8">
+                    <div
+                      class="indicator-dot"
+                      :class="item['out'+i] ? 'dot-active' : 'dot-empty'"
+                    ></div>
+                  </template>
+                </td>
+                <td style="text-align: right; white-space: nowrap">
+                  <button @click="viewData(item)" class="btn-action btn-view">
+                    View
+                  </button>
+                  <button @click="editOdp(item)" class="btn-action btn-edit">
+                    Edit
+                  </button>
+                  <button
+                    @click="deleteOdp(item.id)"
+                    class="btn-action btn-delete"
+                  >
+                    Del
+                  </button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div x-show="modalOpen" x-cloak class="modal-overlay">
+      <div class="modal-content">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+          "
+        >
+          <h2
+            style="margin: 0; font-weight: 900"
+            x-text="isEdit ? 'UPDATE ODP' : 'SUBMIT NEW ODP'"
+          ></h2>
+          <button
+            @click="modalOpen = false"
+            style="
+              background: none;
+              border: none;
+              font-size: 2rem;
+              cursor: pointer;
+              color: #cbd5e1;
+            "
+          >
+            &times;
+          </button>
+        </div>
+
+        <form @submit.prevent="saveData">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
+            <div style="grid-column: span 2" class="form-group">
+              <label>NAMA ODP</label>
+              <input
+                type="text"
+                x-model="form.nama"
+                @input="formatInput('nama')"
+                required
+                placeholder="Contoh: ODP-BPN-01"
+              />
+            </div>
+            <div class="form-group">
+              <label>LEVEL</label>
+              <select x-model="form.level">
+                <option value="Level 1">Level 1</option>
+                <option value="Level 2">Level 2</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>LATLONG</label>
+              <input
+                type="text"
+                x-model="form.latlong"
+                @input="formatInput('latlong')"
+                placeholder="-1.23, 116.45"
+              />
+            </div>
+            <div class="form-group">
+              <label>AREA</label>
+              <select x-model="form.area" @change="form.cluster = ''">
+                <option value="">Pilih Area</option>
+                <option value="EKO">EKO</option>
+                <option value="WKO">WKO</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>CLUSTER</label>
+              <select x-model="form.cluster">
+                <option value="">Pilih Cluster</option>
+                <template x-if="form.area === 'EKO'">
+                  <template
+                    x-for="c in ['TANJUNG SELOR', 'BALIKPAPAN', 'SAMARINDA', 'BANJARMASIN']"
+                  >
+                    <option :value="c" x-text="c"></option>
+                  </template>
+                </template>
+                <template x-if="form.area === 'WKO'">
+                  <template x-for="c in ['PONTIANAK', 'PALANGKARAYA']">
+                    <option :value="c" x-text="c"></option>
+                  </template>
+                </template>
+              </select>
+            </div>
+          </div>
+
+          <div class="tech-section">
+            <h3>Port Assignment (In & Out)</h3>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+              "
+            >
+              <input
+                type="text"
+                class="dark-input"
+                placeholder="Input 1"
+                x-model="form.in1"
+                @input="formatInput('in1')"
+              />
+              <input
+                type="text"
+                class="dark-input"
+                placeholder="Input 2"
+                x-model="form.in2"
+                @input="formatInput('in2')"
+              />
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 0.5rem;
+              "
+            >
+              <template x-for="i in 8">
+                <input
+                  type="text"
+                  class="dark-input"
+                  :placeholder="'Port '+i"
+                  x-model="form['out'+i]"
+                  @input="formatInput('out'+i)"
+                />
+              </template>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            style="
+              width: 100%;
+              background: var(--primary);
+              color: white;
+              border: none;
+              padding: 1.2rem;
+              border-radius: 1rem;
+              font-weight: 900;
+              margin-top: 1.5rem;
+              cursor: pointer;
+            "
+          >
+            SIMPAN PERUBAHAN
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div x-show="cabutModal" x-cloak class="modal-overlay">
+      <div class="modal-content" style="max-width: 450px">
+        <h2
+          style="margin: 0 0 1.5rem 0; font-weight: 900; color: var(--danger)"
+        >
+          FORM CABUT LAYANAN
+        </h2>
+        <div class="form-group">
+          <label>MASUKKAN NOJAR / NAMA PELANGGAN</label>
+          <input
+            type="text"
+            x-model="nojarCabut"
+            placeholder="Contoh: 2020554433"
+          />
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 0.8rem">
+          <button
+            @click="prosesCabut()"
+            style="
+              flex: 2;
+              background: var(--danger);
+              color: white;
+              border: none;
+              padding: 1rem;
+              border-radius: 1rem;
+              font-weight: 900;
+              cursor: pointer;
+            "
+          >
+            PROSES CABUT
+          </button>
+          <button
+            @click="cabutModal = false; nojarCabut = ''"
+            style="
+              flex: 1;
+              background: #f1f5f9;
+              color: #475569;
+              border: none;
+              padding: 1rem;
+              border-radius: 1rem;
+              font-weight: 800;
+              cursor: pointer;
+            "
+          >
+            BATAL
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div x-show="viewOpen" x-cloak class="modal-overlay">
+      <div class="modal-content" style="max-width: 450px">
+        <div style="text-align: center; margin-bottom: 1.5rem">
+          <h2
+            style="font-weight: 900; margin-bottom: 5px"
+            x-text="viewItem.nama"
+          ></h2>
+          <span
+            style="
+              background: #eff6ff;
+              color: var(--primary);
+              padding: 0.4rem 1rem;
+              border-radius: 2rem;
+              font-size: 0.75rem;
+              font-weight: 900;
+            "
+            x-text="viewItem.level"
+          ></span>
+        </div>
+        <div
+          style="
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 1.25rem;
+            font-size: 0.85rem;
+            border: 1px solid #e2e8f0;
+          "
+        >
+          <div style="margin-bottom: 10px">
+            <b>Area:</b> <span x-text="viewItem.area || '-'"></span>
+          </div>
+          <div style="margin-bottom: 10px">
+            <b>Cluster:</b> <span x-text="viewItem.cluster || '-'"></span>
+          </div>
+          <div style="margin-bottom: 10px">
+            <b>Latlong:</b> <span x-text="viewItem.latlong || '-'"></span>
+          </div>
+          <hr
+            style="border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0"
+          />
+          <div style="margin-bottom: 5px">
+            <b>In 1:</b> <span x-text="viewItem.in1 || '-'"></span>
+          </div>
+          <div style="margin-bottom: 15px">
+            <b>In 2:</b> <span x-text="viewItem.in2 || '-'"></span>
+          </div>
+          <b>Out Ports:</b>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 8px;
+              margin-top: 8px;
+            "
+          >
+            <template x-for="i in 8">
+              <div
+                style="
+                  background: white;
+                  padding: 5px 10px;
+                  border-radius: 0.5rem;
+                  border: 1px solid #e2e8f0;
+                "
+              >
+                P<span x-text="i"></span>:
+                <span
+                  x-text="viewItem['out'+i] || '-'"
+                  style="font-weight: bold; color: var(--primary)"
+                ></span>
+              </div>
+            </template>
+            <div class="mt-4">
+              <label
+                class="block text-gray-500 text-[10px] font-bold mb-2 uppercase"
+                ><b>Status Port Output</b></label
+              >
+              <div class="port-grid">
+                <template x-for="i in 8" :key="i">
+                  <div
+                    :class="viewItem['out' + i] ? 'port-item bg-occupied' : 'port-item bg-available'"
+                  >
+                    <div style="opacity: 0.7">P-<span x-text="i"></span></div>
+                    <div x-text="viewItem['out' + i] ? 'FILL' : 'EMPTY'"></div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button
+          @click="viewOpen = false"
+          style="
+            width: 100%;
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 1rem;
+            border-radius: 1rem;
+            font-weight: 800;
+            margin-top: 1.5rem;
+            cursor: pointer;
+          "
+        >
+          TUTUP
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Inisialisasi konfigurasi global SweetAlert2 yang modern
+      const CustomSwal = Swal.mixin({
+        background: "#1e293b",
+        color: "#f8fafc",
+        confirmButtonColor: "#2563eb",
+        cancelButtonColor: "#475569",
+        customClass: {
+          popup: "modern-popup",
+        },
+      });
+
+      function odpApp() {
+        return {
+          // Fungsi untuk menghitung persentase pemanfaatan port output
+          getUtilization(item) {
+            const ports = [
+              "out1",
+              "out2",
+              "out3",
+              "out4",
+              "out5",
+              "out6",
+              "out7",
+              "out8",
+            ];
+            const filled = ports.filter(
+              (p) => item[p] && item[p].trim() !== "",
+            ).length;
+            return (filled / 8) * 100;
+          },
+
+          getStatusClass(item) {
+            const percent = this.getUtilization(item);
+            if (percent === 100) return "status-full"; // Merah (Penuh)
+            if (percent >= 75) return "status-warning"; // Kuning (Hampir Penuh)
+            return "status-safe"; // Hijau (Tersedia)
+          },
+
+          // Fungsi untuk merapikan input secara otomatis
+          formatInput(field) {
+            let value = this.form[field];
+            if (!value) return;
+
+            // 1. Paksa jadi Uppercase
+            value = value.toUpperCase();
+
+            // 2. Jika ini adalah field PORT (in/out) dan user baru mengetik angka Nojar
+            // Kita bantu tambahkan pemisah " - " jika user mengetik spasi setelah angka
+            if (field.startsWith("in") || field.startsWith("out")) {
+              // Jika isinya hanya angka dan diakhiri spasi, tambahkan " - "
+              if (/^\d+ $/.test(value)) {
+                value = value.trim() + " - ";
+              }
+            }
+
+            this.form[field] = value;
+          },
+
+          openInMaps(latlong) {
+            if (!latlong || latlong.trim() === "") {
+              return CustomSwal.fire(
+                "Data Kosong",
+                "Koordinat Latlong belum diisi!",
+                "warning",
+              );
+            }
+
+            // Bersihkan spasi jika ada
+            const coords = latlong.trim().replace(/\s/g, "");
+            const url = `https://www.google.com/maps?q=${coords}`;
+
+            window.open(url, "_blank");
+          },
+
+          odps: [],
+          searchQuery: "",
+          filterArea: "",
+          modalOpen: false,
+          viewOpen: false,
+          cabutModal: false,
+          isEdit: false,
+          nojarCabut: "",
+          form: {
+            nama: "",
+            level: "Level 1",
+            area: "",
+            cluster: "",
+            latlong: "",
+            in1: "",
+            in2: "",
+            out1: "",
+            out2: "",
+            out3: "",
+            out4: "",
+            out5: "",
+            out6: "",
+            out7: "",
+            out8: "",
+          },
+          viewItem: {},
+
+          async fetchData() {
+            const res = await fetch("/api/odp");
+            this.odps = await res.json();
+          },
+
+          get filteredOdps() {
+            return this.odps.filter((o) => {
+              const s = this.searchQuery.toLowerCase();
+              const matchSearch =
+                o.nama.toLowerCase().includes(s) ||
+                Object.values(o).some((v) =>
+                  String(v).toLowerCase().includes(s),
+                );
+              const matchArea = this.filterArea
+                ? o.area === this.filterArea
+                : true;
+              return matchSearch && matchArea;
+            });
+          },
+
+          openModal() {
+            this.isEdit = false;
+            this.form = {
+              nama: "",
+              level: "Level 1",
+              area: "",
+              cluster: "",
+              latlong: "",
+              in1: "",
+              in2: "",
+              out1: "",
+              out2: "",
+              out3: "",
+              out4: "",
+              out5: "",
+              out6: "",
+              out7: "",
+              out8: "",
+            };
+            this.modalOpen = true;
+          },
+
+          viewData(item) {
+            this.viewItem = item;
+            this.viewOpen = true;
+          },
+
+          editOdp(item) {
+            this.isEdit = true;
+            this.form = { ...item };
+            this.modalOpen = true;
+          },
+
+          async saveData() {
+            const portFields = [
+              "in1",
+              "in2",
+              "out1",
+              "out2",
+              "out3",
+              "out4",
+              "out5",
+              "out6",
+              "out7",
+              "out8",
+            ];
+            let duplicateInfo = null;
+
+            // LOGIKA FINAL: Membuang semua karakter selain angka
+            const getNojarOnly = (text) => {
+              if (!text) return "";
+              // Menghapus semua karakter yang BUKAN angka (\D)
+              // Contoh: "abc-202011" -> "202011", "2020 11 abc" -> "202011"
+              const numbers = text.toString().replace(/\D/g, "");
+              return numbers;
+            };
+
+            for (const odp of this.odps) {
+              // Tetap bypass ID sendiri saat edit
+              if (this.isEdit && odp.id === this.form.id) continue;
+
+              // 1. Cek Duplikasi Nama ODP
+              if (
+                odp.nama.trim().toLowerCase() ===
+                this.form.nama.trim().toLowerCase()
+              ) {
+                duplicateInfo = {
+                  val: this.form.nama,
+                  location: "Nama ODP sudah ada",
+                };
+                break;
+              }
+
+              // 2. Cek Duplikasi Nojar di semua Port
+              for (const field of portFields) {
+                const inputNojar = getNojarOnly(this.form[field]);
+                if (!inputNojar) continue;
+
+                const isFound = portFields.some((f) => {
+                  const dbNojar = getNojarOnly(odp[f]);
+                  return dbNojar === inputNojar;
+                });
+
+                if (isFound) {
+                  duplicateInfo = { val: inputNojar, location: odp.nama };
+                  break;
+                }
+              }
+              if (duplicateInfo) break;
+            }
+
+            if (duplicateInfo) {
+              return CustomSwal.fire({
+                title: "Nojar Terdeteksi!",
+                html: `ID/Nojar <b>${duplicateInfo.val}</b> sudah terdaftar di <b>${duplicateInfo.location}</b>.<br><br>Sistem mendeteksi angka yang sama meskipun format penulisannya berbeda.`,
+                icon: "error",
+              });
+            }
+
+            // --- Lanjutkan proses fetch POST/PUT ---
+            const method = this.isEdit ? "PUT" : "POST";
+            const url = this.isEdit ? `/api/odp/${this.form.id}` : "/api/odp";
+
+            try {
+              const res = await fetch(url, {
+                method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(this.form),
+              });
+
+              if (res.ok) {
+                CustomSwal.fire({
+                  title: "Berhasil!",
+                  icon: "success",
+                  timer: 1500,
+                  showConfirmButton: false,
+                });
+                await this.fetchData();
+                this.modalOpen = false;
+              } else {
+                const err = await res.json();
+                CustomSwal.fire("Gagal", err.message, "error");
+              }
+            } catch (error) {
+              CustomSwal.fire("Error", "Koneksi database terputus.", "error");
+            }
+          },
+          async deleteOdp(id) {
+            const result = await CustomSwal.fire({
+              title: "Hapus ODP?",
+              text: "Data akan hilang permanen dari sistem!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#dc2626",
+              confirmButtonText: "Ya, Hapus!",
+              cancelButtonText: "Batal",
+            });
+
+            if (result.isConfirmed) {
+              await fetch(`/api/odp/${id}`, { method: "DELETE" });
+              await this.fetchData();
+              CustomSwal.fire(
+                "Terhapus!",
+                "Data ODP telah dihapus.",
+                "success",
+              );
+            }
+          },
+
+          async prosesCabut() {
+            if (!this.nojarCabut)
+              return CustomSwal.fire(
+                "Peringatan",
+                "Masukkan Nojar atau Nama!",
+                "warning",
+              );
+
+            try {
+              const res = await fetch("/api/odp/cabut", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nojar: this.nojarCabut }),
+              });
+
+              const result = await res.json();
+
+              if (res.ok) {
+                const confirm = await CustomSwal.fire({
+                  title: "Konfirmasi Cabut",
+                  html: `Pelanggan: <b>${this.nojarCabut}</b><br>Lokasi: <b>${result.data.namaOdp}</b><br>Port: <b>${result.data.port}</b>`,
+                  icon: "question",
+                  showCancelButton: true,
+                  confirmButtonText: "Ya, Cabut Sekarang",
+                  cancelButtonText: "Batal",
+                });
+
+                if (confirm.isConfirmed) {
+                  const targetOdp = this.odps.find(
+                    (o) => o.id === result.data.id,
+                  );
+                  const updatedData = { ...targetOdp };
+                  updatedData[`out${result.data.port}`] = "";
+
+                  await fetch(`/api/odp/${targetOdp.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(updatedData),
+                  });
+
+                  CustomSwal.fire(
+                    "Berhasil!",
+                    "Layanan telah dicabut.",
+                    "success",
+                  );
+                  this.cabutModal = false;
+                  this.nojarCabut = "";
+                  await this.fetchData();
+                }
+              } else {
+                CustomSwal.fire("Tidak Ditemukan", result.message, "error");
+              }
+            } catch (error) {
+              CustomSwal.fire("Error", "Gagal menghubungi server.", "error");
+            }
+          },
+
+          exportToExcel() {
+            const ws = XLSX.utils.json_to_sheet(this.odps);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "ODPData");
+            XLSX.writeFile(
+              wb,
+              `FiberFlow_Data_${new Date().toLocaleDateString("id-ID").replace(/\//g, "-")}.xlsx`,
+            );
+          },
+
+          async importFromExcel(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+              const data = new Uint8Array(e.target.result);
+              const workbook = XLSX.read(data, { type: "array" });
+              const json = XLSX.utils.sheet_to_json(
+                workbook.Sheets[workbook.SheetNames[0]],
+              );
+
+              const confirmImport = await CustomSwal.fire({
+                title: "Import Data?",
+                text: `Akan mengimport ${json.length} data ODP dari Excel.`,
+                icon: "info",
+                showCancelButton: true,
+                confirmButtonText: "Ya, Import",
+                cancelButtonText: "Batal",
+              });
+
+              if (confirmImport.isConfirmed) {
+                await fetch("/api/odp/import-bulk", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(json),
+                });
+                await this.fetchData();
+                CustomSwal.fire(
+                  "Selesai!",
+                  "Data berhasil diimport.",
+                  "success",
+                );
+              }
+            };
+            reader.readAsArrayBuffer(file);
+          },
+        };
+      }
+    </script>
+  </body>
+</html>

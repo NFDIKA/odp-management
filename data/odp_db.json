@@ -1,0 +1,41 @@
+[
+  {
+    "id": 1778157455657,
+    "nama": "ODP A",
+    "level": "Level 2",
+    "area": "EKO",
+    "cluster": "TANJUNG SELOR",
+    "latlong": "2.860843,117.3366458",
+    "in1": "T1/C2 ODP AHMAD YANI",
+    "in2": "",
+    "out1": "2020112233",
+    "out2": "",
+    "out3": "",
+    "out4": "",
+    "out5": "",
+    "out6": "",
+    "out7": "",
+    "out8": "",
+    "createdAt": "2026-05-07T12:37:35.657Z",
+    "updatedAt": "2026-05-07T12:41:30.212Z"
+  },
+  {
+    "id": 1778157508426,
+    "nama": "ODP B",
+    "level": "Level 2",
+    "area": "EKO",
+    "cluster": "BALIKPAPAN",
+    "latlong": "",
+    "in1": "T1/C3 ODP AHMAD YANI",
+    "in2": "",
+    "out1": "2121442233",
+    "out2": "",
+    "out3": "",
+    "out4": "",
+    "out5": "",
+    "out6": "",
+    "out7": "",
+    "out8": "",
+    "createdAt": "2026-05-07T12:38:28.426Z"
+  }
+]
