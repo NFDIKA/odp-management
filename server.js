@@ -105,11 +105,11 @@ app.post("/api/odp", (req, res) => {
 app.put("/api/odp/:id", (req, res) => {
   try {
     let data = JSON.parse(fs.readFileSync(DB_PATH, "utf-8"));
-    const id = parseInt(req.params.id);
+    const id = req.params.id; // Jangan gunakan parseInt
 
-    const index = data.findIndex((item) => item.id === id);
+    // Gunakan == agar bisa mencocokkan string "123" dengan angka 123
+    const index = data.findIndex((item) => item.id == id);
     if (index !== -1) {
-      // Update data tanpa menghilangkan ID lama
       data[index] = {
         ...data[index],
         ...req.body,
@@ -129,9 +129,10 @@ app.put("/api/odp/:id", (req, res) => {
 app.delete("/api/odp/:id", (req, res) => {
   try {
     let data = JSON.parse(fs.readFileSync(DB_PATH, "utf-8"));
-    const id = parseInt(req.params.id);
+    const id = req.params.id; // Jangan gunakan parseInt
 
-    const filteredData = data.filter((item) => item.id !== id);
+    // Gunakan != untuk fleksibilitas tipe data
+    const filteredData = data.filter((item) => item.id != id);
 
     if (data.length !== filteredData.length) {
       fs.writeFileSync(DB_PATH, JSON.stringify(filteredData, null, 2));

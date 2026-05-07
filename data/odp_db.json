@@ -9,7 +9,7 @@
     "in1": "T1/C2 ODP AHMAD YANI",
     "in2": "",
     "out1": "2020112233",
-    "out2": "",
+    "out2": "2020112234",
     "out3": "",
     "out4": "",
     "out5": "",
@@ -17,7 +17,7 @@
     "out7": "",
     "out8": "",
     "createdAt": "2026-05-07T12:37:35.657Z",
-    "updatedAt": "2026-05-07T12:41:30.212Z"
+    "updatedAt": "2026-05-07T13:35:59.410Z"
   },
   {
     "id": 1778157508426,
@@ -29,13 +29,44 @@
     "in1": "T1/C3 ODP AHMAD YANI",
     "in2": "",
     "out1": "2121442233",
-    "out2": "",
-    "out3": "",
+    "out2": "2020112238",
+    "out3": "123",
+    "out4": "321",
+    "out5": "111",
+    "out6": "",
+    "out7": "",
+    "out8": "",
+    "createdAt": "2026-05-07T12:38:28.426Z",
+    "updatedAt": "2026-05-07T15:01:30.464Z"
+  },
+  {
+    "id": 1778161151200,
+    "nama": "ODP MAIN",
+    "level": "Level 1",
+    "area": "EKO",
+    "cluster": "BALIKPAPAN",
+    "latlong": "-1.2573341,116.9112679",
+    "in1": "OLT 1/1",
+    "in2": "",
+    "out1": "ODP A",
+    "out2": "ODP B",
+    "out3": "ODP C",
     "out4": "",
     "out5": "",
     "out6": "",
     "out7": "",
     "out8": "",
-    "createdAt": "2026-05-07T12:38:28.426Z"
+    "createdAt": "2026-05-07T13:39:11.201Z",
+    "updatedAt": "2026-05-07T13:39:31.464Z"
+  },
+  {
+    "id": 1778164288038.7974,
+    "nama": "ODP Y",
+    "level": "Level 2",
+    "area": "EKO",
+    "cluster": "SAMARINDA",
+    "out2": "",
+    "createdAt": "2026-05-07T14:31:29.358Z",
+    "updatedAt": "2026-05-07T15:01:06.718Z"
   }
 ]

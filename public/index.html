@@ -394,7 +394,104 @@
         <button @click="openModal()" class="btn btn-primary">+ NEW ODP</button>
       </div>
     </nav>
+
     <div class="main-container">
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 15px;
+          margin-bottom: 20px;
+        "
+      >
+        <div
+          @click="filterStatus = ''; filterArea = ''; filterCluster = ''; searchQuery = ''"
+          style="
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: 0.3s;
+          "
+          onmouseover="this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'"
+          onmouseout="this.style.boxShadow = 'none'"
+        >
+          <div style="font-size: 0.8rem; color: #64748b; font-weight: 600">
+            TOTAL ODP
+          </div>
+          <div
+            style="font-size: 1.5rem; font-weight: 800; color: #1e293b"
+            x-text="odps.length"
+          ></div>
+        </div>
+
+        <div
+          @click="filterStatus = 'Available'"
+          style="
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 5px solid #22c55e;
+            cursor: pointer;
+            transition: 0.3s;
+          "
+          onmouseover="this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'"
+          onmouseout="this.style.boxShadow = 'none'"
+        >
+          <div style="font-size: 0.8rem; color: #22c55e; font-weight: 600">
+            AVAILABLE
+          </div>
+          <div
+            style="font-size: 1.5rem; font-weight: 800; color: #1e293b"
+            x-text="odps.filter(o => getUtilization(o) < 75).length"
+          ></div>
+        </div>
+
+        <div
+          @click="filterStatus = 'Critical'"
+          style="
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 5px solid #eab308;
+            cursor: pointer;
+            transition: 0.3s;
+          "
+          onmouseover="this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'"
+          onmouseout="this.style.boxShadow = 'none'"
+        >
+          <div style="font-size: 0.8rem; color: #eab308; font-weight: 600">
+            CRITICAL (>=75%)
+          </div>
+          <div
+            style="font-size: 1.5rem; font-weight: 800; color: #1e293b"
+            x-text="odps.filter(o => getUtilization(o) >= 75 && getUtilization(o) < 100).length"
+          ></div>
+        </div>
+
+        <div
+          @click="filterStatus = 'Full'"
+          style="
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 5px solid #ef4444;
+            cursor: pointer;
+            transition: 0.3s;
+          "
+          onmouseover="this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'"
+          onmouseout="this.style.boxShadow = 'none'"
+        >
+          <div style="font-size: 0.8rem; color: #ef4444; font-weight: 600">
+            FULL (100%)
+          </div>
+          <div
+            style="font-size: 1.5rem; font-weight: 800; color: #1e293b"
+            x-text="odps.filter(o => getUtilization(o) === 100).length"
+          ></div>
+        </div>
+      </div>
       <div
         style="
           display: flex;
@@ -402,6 +499,10 @@
           margin-bottom: 1.5rem;
           align-items: flex-end;
           flex-wrap: wrap;
+          background: #f8fafc;
+          padding: 15px;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
         "
       >
         <div style="flex: 2; min-width: 250px">
@@ -418,10 +519,11 @@
           <input
             type="text"
             x-model="searchQuery"
-            placeholder="Cari Nama ODP atau Pelanggan..."
+            placeholder="Cari Nama ODP atau Nojar..."
           />
         </div>
-        <div style="flex: 1; min-width: 150px">
+
+        <div style="flex: 1; min-width: 140px">
           <label
             style="
               font-size: 0.65rem;
@@ -432,17 +534,79 @@
             "
             >FILTER AREA</label
           >
-          <select x-model="filterArea">
+          <select x-model="filterArea" @change="filterCluster = ''">
             <option value="">Semua Area</option>
-            <option value="EKO">EKO</option>
-            <option value="WKO">WKO</option>
+            <template
+              x-for="area in [...new Set(odps.map(o => o.area))].filter(a => a)"
+              :key="area"
+            >
+              <option :value="area" x-text="area"></option>
+            </template>
           </select>
         </div>
-        <div style="display: flex; gap: 0.5rem">
-          <button @click="exportToExcel()" class="btn btn-excel">
+
+        <div style="flex: 1; min-width: 140px">
+          <label
+            style="
+              font-size: 0.65rem;
+              font-weight: 800;
+              color: #64748b;
+              display: block;
+              margin-bottom: 5px;
+            "
+            >FILTER CLUSTER</label
+          >
+          <select x-model="filterCluster">
+            <option value="">Semua Cluster</option>
+            <template
+              x-for="cluster in [...new Set(odps.filter(o => !filterArea || o.area === filterArea).map(o => o.cluster))].filter(c => c)"
+              :key="cluster"
+            >
+              <option :value="cluster" x-text="cluster"></option>
+            </template>
+          </select>
+        </div>
+
+        <div style="flex: 1; min-width: 140px">
+          <label
+            style="
+              font-size: 0.65rem;
+              font-weight: 800;
+              color: #64748b;
+              display: block;
+              margin-bottom: 5px;
+            "
+            >STATUS ODP</label
+          >
+          <select x-model="filterStatus">
+            <option value="">Semua Status</option>
+            <option value="Available">Available (< 75%)</option>
+            <option value="Critical">Critical (≥ 75%)</option>
+            <option value="Full">Full (100%)</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; margin-left: auto">
+          <button
+            @click="exportToExcel()"
+            class="btn btn-excel"
+            title="Download data ke Excel"
+          >
             Export XLSX
           </button>
-          <label class="btn btn-excel" style="background: #2b5797">
+          <button
+            @click="downloadTemplate()"
+            class="btn btn-excel"
+            style="background: #252b34; cursor: pointer"
+            title="Download Template Excel"
+          >
+            Download Template
+          </button>
+          <label
+            class="btn btn-excel"
+            style="background: #2b5797; cursor: pointer"
+            title="Upload data dari Excel"
+          >
             Import XLSX
             <input
               type="file"
@@ -467,56 +631,123 @@
           </thead>
           <tbody>
             <template x-for="item in filteredOdps" :key="item.id">
-              <tr style="border-bottom: 1px solid #f1f5f9">
+              <tr
+                :class="getStatusClass(item)"
+                style="border-bottom: 1px solid #f1f5f9"
+              >
                 <td>
                   <div
-                    style="font-weight: 900; font-size: 1rem"
+                    style="font-weight: 800; font-size: 1rem"
                     x-text="item.nama"
                   ></div>
                   <div
                     style="
-                      color: var(--primary);
-                      font-size: 0.7rem;
-                      font-weight: 800;
+                      display: flex;
+                      align-items: center;
+                      gap: 5px;
+                      margin-top: 4px;
                     "
-                    x-text="item.level"
-                  ></div>
+                  >
+                    <span
+                      style="
+                        color: var(--primary);
+                        font-size: 0.7rem;
+                        font-weight: 700;
+                      "
+                      x-text="item.level"
+                    ></span>
+                    <span
+                      :class="{
+            'badge badge-green': getUtilization(item) < 75,
+            'badge badge-yellow': getUtilization(item) >= 75 && getUtilization(item) < 100,
+            'badge badge-red': getUtilization(item) === 100
+          }"
+                      x-text="getUtilization(item) === 100 ? 'FULL' : (getUtilization(item) >= 75 ? 'CRITICAL' : 'AVAILABLE')"
+                    ></span>
+                  </div>
+                  <template x-if="isNojarMatch(item)">
+                    <div
+                      style="
+                        margin-top: 5px;
+                        font-size: 10px;
+                        color: #d97706;
+                        font-weight: bold;
+                      "
+                    >
+                      🔍 Nojar ditemukan di Port
+                      <span x-text="isNojarMatch(item)"></span>
+                    </div>
+                  </template>
                 </td>
+
                 <td>
-                  <div style="font-weight: 600" x-text="item.area || '-'"></div>
                   <div
-                    style="font-size: 0.7rem; color: #94a3b8"
-                    x-text="item.cluster || '-'"
+                    style="font-weight: 700; color: #1e293b"
+                    x-text="item.area"
+                  ></div>
+                  <div
+                    style="
+                      font-size: 0.7rem;
+                      color: #94a3b8;
+                      text-transform: uppercase;
+                    "
+                    x-text="item.cluster"
                   ></div>
                 </td>
+
                 <td style="text-align: center">
-                  <template x-for="i in 2">
+                  <div style="display: flex; justify-content: center; gap: 2px">
                     <div
                       class="indicator-dot"
-                      :class="item['in'+i] ? 'dot-active' : 'dot-empty'"
+                      :class="item.in1 ? 'dot-active' : 'dot-empty'"
                     ></div>
-                  </template>
-                </td>
-                <td style="text-align: center">
-                  <template x-for="i in 8">
                     <div
                       class="indicator-dot"
-                      :class="item['out'+i] ? 'dot-active' : 'dot-empty'"
+                      :class="item.in2 ? 'dot-active' : 'dot-empty'"
                     ></div>
-                  </template>
+                  </div>
+                  <div
+                    style="font-size: 0.6rem; color: #94a3b8; margin-top: 4px"
+                  >
+                    IN
+                  </div>
                 </td>
+
+                <td style="text-align: center">
+                  <div style="display: flex; justify-content: center; gap: 1px">
+                    <template x-for="i in 8">
+                      <div
+                        class="indicator-dot"
+                        :class="item['out'+i] ? 'dot-active' : 'dot-empty'"
+                      ></div>
+                    </template>
+                  </div>
+                  <div
+                    style="font-size: 0.6rem; color: #94a3b8; margin-top: 4px"
+                  >
+                    <span x-text="getUtilization(item)"></span>% Filled
+                  </div>
+                </td>
+
                 <td style="text-align: right; white-space: nowrap">
+                  <button
+                    @click="openInMaps(item.latlong)"
+                    class="btn-action btn-view"
+                    style="color: #13be21"
+                  >
+                    📍 MAP
+                  </button>
                   <button @click="viewData(item)" class="btn-action btn-view">
-                    View
+                    VIEW
                   </button>
                   <button @click="editOdp(item)" class="btn-action btn-edit">
-                    Edit
+                    EDIT
                   </button>
                   <button
                     @click="deleteOdp(item.id)"
                     class="btn-action btn-delete"
                   >
-                    Del
+                    DEL
                   </button>
                 </td>
               </tr>
@@ -690,36 +921,20 @@
           />
         </div>
 
-        <div style="margin-top: 2rem; display: flex; gap: 0.8rem">
+        <div style="display: flex; gap: 10px; margin-top: 1.5rem">
           <button
-            @click="prosesCabut()"
-            style="
-              flex: 2;
-              background: var(--danger);
-              color: white;
-              border: none;
-              padding: 1rem;
-              border-radius: 1rem;
-              font-weight: 900;
-              cursor: pointer;
-            "
-          >
-            PROSES CABUT
-          </button>
-          <button
-            @click="cabutModal = false; nojarCabut = ''"
-            style="
-              flex: 1;
-              background: #f1f5f9;
-              color: #475569;
-              border: none;
-              padding: 1rem;
-              border-radius: 1rem;
-              font-weight: 800;
-              cursor: pointer;
-            "
+            @click="cabutModal = false"
+            class="btn"
+            style="background: #f1f5f9; flex: 1"
           >
             BATAL
+          </button>
+          <button
+            @click="findAndConfirmCabut()"
+            class="btn"
+            style="background: var(--danger); color: white; flex: 2"
+          >
+            PROSES CABUT
           </button>
         </div>
       </div>
@@ -847,7 +1062,153 @@
 
       function odpApp() {
         return {
-          // Fungsi untuk menghitung persentase pemanfaatan port output
+          // --- STATE DATA ---
+          odps: [],
+          searchQuery: "",
+          filterArea: "",
+          filterCluster: "",
+          filterStatus: "",
+          modalOpen: false,
+          viewOpen: false,
+          cabutModal: false,
+          isEdit: false,
+          nojarCabut: "",
+          form: {
+            nama: "",
+            level: "Level 2",
+            area: "",
+            cluster: "",
+            latlong: "",
+            in1: "",
+            in2: "",
+            out1: "",
+            out2: "",
+            out3: "",
+            out4: "",
+            out5: "",
+            out6: "",
+            out7: "",
+            out8: "",
+          },
+          viewItem: {},
+
+          // --- FUNGSI CABUT LAYANAN ---
+          // Di dalam return { ... } odpApp
+          async findAndConfirmCabut() {
+            if (!this.nojarCabut || this.nojarCabut.length < 3) {
+              return CustomSwal.fire(
+                "Peringatan",
+                "Masukkan Nojar yang valid",
+                "warning",
+              );
+            }
+
+            let targetOdp = null;
+            let targetPortKey = null;
+
+            // 1. Cari Nojar di seluruh data (Global Search)
+            this.odps.forEach((odp) => {
+              for (let i = 1; i <= 8; i++) {
+                let portValue = odp["out" + i] ? odp["out" + i].toString() : "";
+                if (portValue.includes(this.nojarCabut)) {
+                  targetOdp = odp;
+                  targetPortKey = "out" + i;
+                }
+              }
+            });
+
+            if (targetOdp) {
+              // 2. Konfirmasi dengan SweetAlert
+              const result = await CustomSwal.fire({
+                title: "Data Ditemukan!",
+                html: `Cabut <b>${this.nojarCabut}</b> dari <b>${targetOdp.nama}</b> (Port ${targetPortKey.toUpperCase()})?`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Ya, Cabut!",
+                confirmButtonColor: "#ef4444",
+              });
+
+              if (result.isConfirmed) {
+                // 3. Eksekusi Update ke Server
+                const updatedData = { ...targetOdp };
+                updatedData[targetPortKey] = ""; // Kosongkan port
+
+                try {
+                  const res = await fetch(`/api/odp/${targetOdp.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(updatedData),
+                  });
+
+                  if (res.ok) {
+                    await this.fetchData(); // Refresh tabel & dashboard
+                    this.cabutModal = false;
+                    this.nojarCabut = ""; // Reset input
+                    CustomSwal.fire(
+                      "Berhasil",
+                      "Layanan telah dicabut.",
+                      "success",
+                    );
+                  }
+                } catch (err) {
+                  CustomSwal.fire("Error", "Gagal menghubungi server", "error");
+                }
+              }
+            } else {
+              CustomSwal.fire(
+                "Tidak Ditemukan",
+                "Nojar tidak terdaftar di ODP manapun.",
+                "error",
+              );
+            }
+          },
+          // --- LOGIKA FILTERING (Pusat Kendali Tabel) ---
+          get filteredOdps() {
+            if (!this.odps) return [];
+
+            return this.odps.filter((item) => {
+              // Normalisasi pencarian (Search Query)
+              const s = this.searchQuery.toLowerCase().trim();
+              const nama = (item.nama || "").toLowerCase();
+
+              const searchMatch =
+                !s ||
+                nama.includes(s) ||
+                [
+                  "out1",
+                  "out2",
+                  "out3",
+                  "out4",
+                  "out5",
+                  "out6",
+                  "out7",
+                  "out8",
+                ].some((p) =>
+                  (item[p] || "").toString().toLowerCase().includes(s),
+                );
+
+              // Normalisasi Filter Dropdown (PENTING: Gunakan String() untuk membandingkan)
+              const areaMatch =
+                !this.filterArea ||
+                String(item.area) === String(this.filterArea);
+              const clusterMatch =
+                !this.filterCluster ||
+                String(item.cluster) === String(this.filterCluster);
+
+              // Tambahkan filter status jika Anda menggunakannya
+              const utilization = this.getUtilization(item);
+              let statusMatch = true;
+              if (this.filterStatus === "Available")
+                statusMatch = utilization < 75;
+              if (this.filterStatus === "Critical")
+                statusMatch = utilization >= 75 && utilization < 100;
+              if (this.filterStatus === "Full")
+                statusMatch = utilization === 100;
+
+              return searchMatch && areaMatch && clusterMatch && statusMatch;
+            });
+          },
+          // --- FUNGSI HELPER ---
           getUtilization(item) {
             const ports = [
               "out1",
@@ -867,28 +1228,53 @@
 
           getStatusClass(item) {
             const percent = this.getUtilization(item);
-            if (percent === 100) return "status-full"; // Merah (Penuh)
-            if (percent >= 75) return "status-warning"; // Kuning (Hampir Penuh)
-            return "status-safe"; // Hijau (Tersedia)
+            if (percent === 100) return "status-full";
+            if (percent >= 75) return "status-warning";
+            return "status-safe";
           },
 
-          // Fungsi untuk merapikan input secara otomatis
+          isNojarMatch(item) {
+            if (!this.searchQuery || this.searchQuery.length < 3) return null;
+            const s = this.searchQuery.toLowerCase();
+            const portFields = [
+              "out1",
+              "out2",
+              "out3",
+              "out4",
+              "out5",
+              "out6",
+              "out7",
+              "out8",
+            ];
+            const matchIndex = portFields.findIndex(
+              (p) => item[p] && item[p].toLowerCase().includes(s),
+            );
+            if (matchIndex !== -1 && !item.nama.toLowerCase().includes(s)) {
+              return matchIndex + 1;
+            }
+            return null;
+          },
+
+          // --- ACTION HANDLERS ---
+          async fetchData() {
+            try {
+              const res = await fetch("/api/odp");
+              this.odps = await res.json();
+            } catch (error) {
+              console.error("Gagal mengambil data:", error);
+            }
+          },
+
           formatInput(field) {
             let value = this.form[field];
             if (!value) return;
-
-            // 1. Paksa jadi Uppercase
             value = value.toUpperCase();
-
-            // 2. Jika ini adalah field PORT (in/out) dan user baru mengetik angka Nojar
-            // Kita bantu tambahkan pemisah " - " jika user mengetik spasi setelah angka
-            if (field.startsWith("in") || field.startsWith("out")) {
-              // Jika isinya hanya angka dan diakhiri spasi, tambahkan " - "
-              if (/^\d+ $/.test(value)) {
-                value = value.trim() + " - ";
-              }
+            if (
+              (field.startsWith("in") || field.startsWith("out")) &&
+              /^\d+ $/.test(value)
+            ) {
+              value = value.trim() + " - ";
             }
-
             this.form[field] = value;
           },
 
@@ -900,66 +1286,16 @@
                 "warning",
               );
             }
-
-            // Bersihkan spasi jika ada
             const coords = latlong.trim().replace(/\s/g, "");
-            const url = `https://www.google.com/maps?q=${coords}`;
-
+            const url = `https://www.google.com/maps/search/?api=1&query=${coords}`;
             window.open(url, "_blank");
-          },
-
-          odps: [],
-          searchQuery: "",
-          filterArea: "",
-          modalOpen: false,
-          viewOpen: false,
-          cabutModal: false,
-          isEdit: false,
-          nojarCabut: "",
-          form: {
-            nama: "",
-            level: "Level 1",
-            area: "",
-            cluster: "",
-            latlong: "",
-            in1: "",
-            in2: "",
-            out1: "",
-            out2: "",
-            out3: "",
-            out4: "",
-            out5: "",
-            out6: "",
-            out7: "",
-            out8: "",
-          },
-          viewItem: {},
-
-          async fetchData() {
-            const res = await fetch("/api/odp");
-            this.odps = await res.json();
-          },
-
-          get filteredOdps() {
-            return this.odps.filter((o) => {
-              const s = this.searchQuery.toLowerCase();
-              const matchSearch =
-                o.nama.toLowerCase().includes(s) ||
-                Object.values(o).some((v) =>
-                  String(v).toLowerCase().includes(s),
-                );
-              const matchArea = this.filterArea
-                ? o.area === this.filterArea
-                : true;
-              return matchSearch && matchArea;
-            });
           },
 
           openModal() {
             this.isEdit = false;
             this.form = {
               nama: "",
-              level: "Level 1",
+              level: "Level 2",
               area: "",
               cluster: "",
               latlong: "",
@@ -977,15 +1313,15 @@
             this.modalOpen = true;
           },
 
-          viewData(item) {
-            this.viewItem = item;
-            this.viewOpen = true;
-          },
-
           editOdp(item) {
             this.isEdit = true;
             this.form = { ...item };
             this.modalOpen = true;
+          },
+
+          viewData(item) {
+            this.viewItem = item;
+            this.viewOpen = true;
           },
 
           async saveData() {
@@ -1003,20 +1339,12 @@
             ];
             let duplicateInfo = null;
 
-            // LOGIKA FINAL: Membuang semua karakter selain angka
-            const getNojarOnly = (text) => {
-              if (!text) return "";
-              // Menghapus semua karakter yang BUKAN angka (\D)
-              // Contoh: "abc-202011" -> "202011", "2020 11 abc" -> "202011"
-              const numbers = text.toString().replace(/\D/g, "");
-              return numbers;
-            };
+            const getNojarOnly = (text) =>
+              text ? text.toString().replace(/\D/g, "") : "";
 
             for (const odp of this.odps) {
-              // Tetap bypass ID sendiri saat edit
               if (this.isEdit && odp.id === this.form.id) continue;
 
-              // 1. Cek Duplikasi Nama ODP
               if (
                 odp.nama.trim().toLowerCase() ===
                 this.form.nama.trim().toLowerCase()
@@ -1028,16 +1356,12 @@
                 break;
               }
 
-              // 2. Cek Duplikasi Nojar di semua Port
               for (const field of portFields) {
                 const inputNojar = getNojarOnly(this.form[field]);
                 if (!inputNojar) continue;
-
-                const isFound = portFields.some((f) => {
-                  const dbNojar = getNojarOnly(odp[f]);
-                  return dbNojar === inputNojar;
-                });
-
+                const isFound = portFields.some(
+                  (f) => getNojarOnly(odp[f]) === inputNojar,
+                );
                 if (isFound) {
                   duplicateInfo = { val: inputNojar, location: odp.nama };
                   break;
@@ -1048,13 +1372,12 @@
 
             if (duplicateInfo) {
               return CustomSwal.fire({
-                title: "Nojar Terdeteksi!",
-                html: `ID/Nojar <b>${duplicateInfo.val}</b> sudah terdaftar di <b>${duplicateInfo.location}</b>.<br><br>Sistem mendeteksi angka yang sama meskipun format penulisannya berbeda.`,
+                title: "Duplikasi Terdeteksi!",
+                html: `Data <b>${duplicateInfo.val}</b> sudah ada di <b>${duplicateInfo.location}</b>.`,
                 icon: "error",
               });
             }
 
-            // --- Lanjutkan proses fetch POST/PUT ---
             const method = this.isEdit ? "PUT" : "POST";
             const url = this.isEdit ? `/api/odp/${this.form.id}` : "/api/odp";
 
@@ -1074,90 +1397,25 @@
                 });
                 await this.fetchData();
                 this.modalOpen = false;
-              } else {
-                const err = await res.json();
-                CustomSwal.fire("Gagal", err.message, "error");
               }
             } catch (error) {
-              CustomSwal.fire("Error", "Koneksi database terputus.", "error");
+              CustomSwal.fire("Error", "Koneksi bermasalah.", "error");
             }
           },
+
           async deleteOdp(id) {
             const result = await CustomSwal.fire({
               title: "Hapus ODP?",
-              text: "Data akan hilang permanen dari sistem!",
               icon: "warning",
               showCancelButton: true,
               confirmButtonColor: "#dc2626",
               confirmButtonText: "Ya, Hapus!",
-              cancelButtonText: "Batal",
             });
 
             if (result.isConfirmed) {
               await fetch(`/api/odp/${id}`, { method: "DELETE" });
               await this.fetchData();
-              CustomSwal.fire(
-                "Terhapus!",
-                "Data ODP telah dihapus.",
-                "success",
-              );
-            }
-          },
-
-          async prosesCabut() {
-            if (!this.nojarCabut)
-              return CustomSwal.fire(
-                "Peringatan",
-                "Masukkan Nojar atau Nama!",
-                "warning",
-              );
-
-            try {
-              const res = await fetch("/api/odp/cabut", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nojar: this.nojarCabut }),
-              });
-
-              const result = await res.json();
-
-              if (res.ok) {
-                const confirm = await CustomSwal.fire({
-                  title: "Konfirmasi Cabut",
-                  html: `Pelanggan: <b>${this.nojarCabut}</b><br>Lokasi: <b>${result.data.namaOdp}</b><br>Port: <b>${result.data.port}</b>`,
-                  icon: "question",
-                  showCancelButton: true,
-                  confirmButtonText: "Ya, Cabut Sekarang",
-                  cancelButtonText: "Batal",
-                });
-
-                if (confirm.isConfirmed) {
-                  const targetOdp = this.odps.find(
-                    (o) => o.id === result.data.id,
-                  );
-                  const updatedData = { ...targetOdp };
-                  updatedData[`out${result.data.port}`] = "";
-
-                  await fetch(`/api/odp/${targetOdp.id}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(updatedData),
-                  });
-
-                  CustomSwal.fire(
-                    "Berhasil!",
-                    "Layanan telah dicabut.",
-                    "success",
-                  );
-                  this.cabutModal = false;
-                  this.nojarCabut = "";
-                  await this.fetchData();
-                }
-              } else {
-                CustomSwal.fire("Tidak Ditemukan", result.message, "error");
-              }
-            } catch (error) {
-              CustomSwal.fire("Error", "Gagal menghubungi server.", "error");
+              CustomSwal.fire("Terhapus!", "Data telah dihapus.", "success");
             }
           },
 
@@ -1165,43 +1423,91 @@
             const ws = XLSX.utils.json_to_sheet(this.odps);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "ODPData");
-            XLSX.writeFile(
-              wb,
-              `FiberFlow_Data_${new Date().toLocaleDateString("id-ID").replace(/\//g, "-")}.xlsx`,
-            );
+            XLSX.writeFile(wb, `FiberFlow_${new Date().getTime()}.xlsx`);
+          },
+
+          // Fungsi untuk mengunduh template Excel dengan header yang sudah ditentukan
+          downloadTemplate() {
+            const headers = [
+              [
+                "nama",
+                "level",
+                "area",
+                "cluster",
+                "latlong",
+                "in1",
+                "in2",
+                "out1",
+                "out2",
+                "out3",
+                "out4",
+                "out5",
+                "out6",
+                "out7",
+                "out8",
+              ],
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(headers);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Template");
+            XLSX.writeFile(wb, "template_import_odp.xlsx");
           },
 
           async importFromExcel(event) {
             const file = event.target.files[0];
+            if (!file) return;
+
             const reader = new FileReader();
             reader.onload = async (e) => {
-              const data = new Uint8Array(e.target.result);
-              const workbook = XLSX.read(data, { type: "array" });
-              const json = XLSX.utils.sheet_to_json(
-                workbook.Sheets[workbook.SheetNames[0]],
-              );
-
-              const confirmImport = await CustomSwal.fire({
-                title: "Import Data?",
-                text: `Akan mengimport ${json.length} data ODP dari Excel.`,
-                icon: "info",
-                showCancelButton: true,
-                confirmButtonText: "Ya, Import",
-                cancelButtonText: "Batal",
-              });
-
-              if (confirmImport.isConfirmed) {
-                await fetch("/api/odp/import-bulk", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(json),
-                });
-                await this.fetchData();
-                CustomSwal.fire(
-                  "Selesai!",
-                  "Data berhasil diimport.",
-                  "success",
+              try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: "array" });
+                const rawJson = XLSX.utils.sheet_to_json(
+                  workbook.Sheets[workbook.SheetNames[0]],
                 );
+
+                // Normalisasi: Paksa header huruf kecil & hapus spasi tak terlihat
+                const sanitizedData = rawJson.map((row) => {
+                  const newRow = {};
+                  Object.keys(row).forEach((key) => {
+                    const cleanKey = key.toLowerCase().trim();
+                    // Pastikan Nojar/Data diubah ke String agar filter .includes() tidak error
+                    newRow[cleanKey] = row[key]
+                      ? row[key].toString().trim()
+                      : "";
+                  });
+
+                  // Pastikan ID dihasilkan jika tidak ada
+                  if (!newRow.id) newRow.id = Date.now() + Math.random();
+                  return newRow;
+                });
+
+                if (
+                  await CustomSwal.fire({
+                    title: "Import Data?",
+                    text: `Proses ${sanitizedData.length} data?`,
+                    icon: "question",
+                    showCancelButton: true,
+                  })
+                ) {
+                  const res = await fetch("/api/odp/import-bulk", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(sanitizedData),
+                  });
+
+                  if (res.ok) {
+                    await this.fetchData(); // Ambil ulang data dari server
+                    event.target.value = ""; // Reset input file
+                    CustomSwal.fire(
+                      "Berhasil",
+                      "Data berhasil diimpor dan muncul di tabel",
+                      "success",
+                    );
+                  }
+                }
+              } catch (err) {
+                CustomSwal.fire("Error", "Format file tidak didukung", "error");
               }
             };
             reader.readAsArrayBuffer(file);
