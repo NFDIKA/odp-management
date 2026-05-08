@@ -8,7 +8,7 @@
     "latlong": "2.860843,117.3366458",
     "in1": "T1/C2 ODP AHMAD YANI",
     "in2": "",
-    "out1": "2020112233",
+    "out1": "",
     "out2": "2020112234",
     "out3": "",
     "out4": "",
@@ -17,7 +17,7 @@
     "out7": "",
     "out8": "",
     "createdAt": "2026-05-07T12:37:35.657Z",
-    "updatedAt": "2026-05-07T13:35:59.410Z"
+    "updatedAt": "2026-05-08T14:04:38.690Z"
   },
   {
     "id": 1778157508426,
@@ -33,11 +33,11 @@
     "out3": "123",
     "out4": "321",
     "out5": "111",
-    "out6": "",
+    "out6": "654",
     "out7": "",
     "out8": "",
     "createdAt": "2026-05-07T12:38:28.426Z",
-    "updatedAt": "2026-05-07T15:01:30.464Z"
+    "updatedAt": "2026-05-08T02:26:52.532Z"
   },
   {
     "id": 1778161151200,
@@ -68,5 +68,45 @@
     "out2": "",
     "createdAt": "2026-05-07T14:31:29.358Z",
     "updatedAt": "2026-05-07T15:01:06.718Z"
+  },
+  {
+    "id": 1778248513495.1213,
+    "nama": "ODP-TK1",
+    "kota": "TARAKAN",
+    "level": "Level 2",
+    "area": "EKO",
+    "cluster": "TANJUNG SELOR",
+    "out1": "202011",
+    "createdAt": "2026-05-08T13:55:15.021Z"
+  },
+  {
+    "id": 1778248513495.0422,
+    "nama": "ODP-TK2",
+    "kota": "TARAKAN",
+    "level": "Level 2",
+    "area": "EKO",
+    "cluster": "TANJUNG SELOR",
+    "out1": "202022",
+    "createdAt": "2026-05-08T13:55:15.021Z"
+  },
+  {
+    "id": 1778248550413,
+    "nama": "ODP BPN 1",
+    "level": "Level 2",
+    "area": "EKO",
+    "cluster": "BALIKPAPAN",
+    "latlong": "",
+    "in1": "",
+    "in2": "",
+    "out1": "CCDD",
+    "out2": "",
+    "out3": "",
+    "out4": "",
+    "out5": "",
+    "out6": "",
+    "out7": "",
+    "out8": "",
+    "kota": "IKN",
+    "createdAt": "2026-05-08T13:55:50.413Z"
   }
 ]
