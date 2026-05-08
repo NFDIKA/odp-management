@@ -10,7 +10,7 @@
     ></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link
-      href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css" />
@@ -46,6 +46,7 @@
           FiberFlow
         </h1>
       </div>
+
       <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem">
         <button
           @click="cabutModal = true"
@@ -240,6 +241,7 @@
             <input
               type="text"
               x-model="searchQuery"
+              @input="currentPage = 1"
               placeholder="Cari Nama ODP atau Nojar..."
             />
           </div>
@@ -255,7 +257,7 @@
               "
               >FILTER AREA</label
             >
-            <select x-model="filterArea" @change="filterCluster = ''">
+            <select x-model="filterArea" @change="currentPage = 1">
               <option value="">Semua Area</option>
               <template
                 x-for="area in [...new Set(odps.map(o => o.area))].filter(a => a)"
@@ -277,7 +279,7 @@
               "
               >FILTER CLUSTER</label
             >
-            <select x-model="filterCluster">
+            <select x-model="filterCluster" @change="currentPage = 1">
               <option value="">Semua Cluster</option>
               <template
                 x-for="cluster in [...new Set(odps.filter(o => !filterArea || o.area === filterArea).map(o => o.cluster))].filter(c => c)"
@@ -299,7 +301,7 @@
               "
               >STATUS ODP</label
             >
-            <select x-model="filterStatus">
+            <select x-model="filterStatus" @change="currentPage = 1">
               <option value="">Semua Status</option>
               <option value="Available">Available (< 75%)</option>
               <option value="Critical">Critical (≥ 75%)</option>
@@ -318,7 +320,7 @@
               "
               >FILTER KOTA</label
             >
-            <select x-model="filterKota">
+            <select x-model="filterKota" @change="currentPage = 1">
               <option value="">Semua Kota</option>
               <template
                 x-for="city in [...new Set(odps.filter(o => !filterCluster || o.cluster === filterCluster).map(o => o.kota))].filter(c => c)"
@@ -327,6 +329,22 @@
                 <option :value="city" x-text="city"></option>
               </template>
             </select>
+          </div>
+
+          <div style="min-width: 120px">
+            <button
+              @click="resetFilters()"
+              class="btn"
+              style="
+                width: 100%;
+                background: #e2e8f0;
+                color: #334155;
+                font-weight: 800;
+                height: 46px;
+              "
+            >
+              Reset All
+            </button>
           </div>
         </div>
       </div>
@@ -343,7 +361,7 @@
             </tr>
           </thead>
           <tbody>
-            <template x-for="item in filteredOdps" :key="item.id">
+            <template x-for="item in paginatedOdps" :key="item.id">
               <tr
                 :class="getStatusClass(item)"
                 style="border-bottom: 1px solid #f1f5f9"
@@ -424,7 +442,7 @@
                   <div
                     style="font-size: 0.6rem; color: #94a3b8; margin-top: 4px"
                   >
-                    IN
+                    <b>IN</b>
                   </div>
                 </td>
 
@@ -433,14 +451,23 @@
                     <template x-for="i in 8">
                       <div
                         class="indicator-dot"
-                        :class="item['out'+i] ? 'dot-active' : 'dot-empty'"
+                        :class="
+                        !item['out'+i]
+                          ? 'dot-empty'
+                          : getUtilization(item) >= 80
+                          ? 'dot-critical'
+                          : getUtilization(item) >= 50
+                          ? 'dot-warning'
+                          : 'dot-active'
+                      "
                       ></div>
                     </template>
                   </div>
+
                   <div
                     style="font-size: 0.6rem; color: #94a3b8; margin-top: 4px"
                   >
-                    <span x-text="getUtilization(item)"></span>% Filled
+                    <b><span x-text="getUtilization(item)"></span>% Filled</b>
                   </div>
                 </td>
 
@@ -469,164 +496,248 @@
             </template>
           </tbody>
         </table>
-      </div>
-    </div>
 
-    <div x-show="modalOpen" x-cloak class="modal-overlay">
-      <div class="modal-content">
         <div
           style="
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border-top: 1px solid #e2e8f0;
+            flex-wrap: wrap;
+            gap: 1rem;
           "
         >
-          <h2
-            style="margin: 0; font-weight: 900"
-            x-text="isEdit ? 'UPDATE ODP' : 'SUBMIT NEW ODP'"
-          ></h2>
+          <div style="font-size: 0.85rem; color: #64748b">
+            Menampilkan
+            <b x-text="paginatedOdps.length"></b>
+            dari
+            <b x-text="filteredOdps.length"></b>
+            data
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; align-items: center">
+            <button
+              class="btn"
+              @click="if(currentPage > 1) currentPage--"
+              :disabled="currentPage === 1"
+              style="padding: 0.5rem 1rem"
+            >
+              Prev
+            </button>
+
+            <div
+              style="
+                background: #f1f5f9;
+                padding: 0.5rem 1rem;
+                border-radius: 0.5rem;
+                font-weight: 700;
+              "
+            >
+              <span x-text="currentPage"></span> /
+              <span x-text="totalPages || 1"></span>
+            </div>
+
+            <button
+              class="btn"
+              @click="if(currentPage < totalPages) currentPage++"
+              :disabled="currentPage >= totalPages"
+              style="padding: 0.5rem 1rem"
+            >
+              Next
+            </button>
+
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span style="font-size: 0.8rem">Rows:</span>
+
+              <select
+                x-model="itemsPerPage"
+                @change="currentPage = 1"
+                style="width: 80px"
+              >
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      x-show="modalOpen"
+      x-cloak
+      class="modal-overlay"
+      @click.self="modalOpen = false"
+      @keydown.escape.window="modalOpen = false"
+    >
+      <div class="modal-content form-modal">
+        <!-- HEADER -->
+        <div class="form-modal-header">
+          <div>
+            <h2
+              class="form-title"
+              x-text="isEdit ? 'UPDATE ODP' : 'SUBMIT NEW ODP'"
+            ></h2>
+
+            <p class="form-subtitle">
+              Kelola data ODP dan assignment port dengan lebih rapi
+            </p>
+          </div>
+
           <button
+            type="button"
             @click="modalOpen = false"
-            style="
-              background: none;
-              border: none;
-              font-size: 2rem;
-              cursor: pointer;
-              color: #cbd5e1;
-            "
+            class="modal-close-btn"
           >
             &times;
           </button>
         </div>
 
-        <form @submit.prevent="saveData">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
-            <div style="grid-column: span 2" class="form-group">
-              <label>NAMA ODP</label>
-              <input
-                type="text"
-                x-model="form.nama"
-                @input="formatInput('nama')"
-                required
-                placeholder="Contoh: ODP-BPN-01"
-              />
+        <!-- SCROLLABLE BODY -->
+        <div class="form-body">
+          <form @submit.prevent="saveData">
+            <!-- BASIC INFO -->
+            <div class="form-section">
+              <div class="form-grid">
+                <!-- NAMA -->
+                <div class="form-group full-width">
+                  <label>NAMA ODP</label>
+
+                  <input
+                    type="text"
+                    x-model="form.nama"
+                    @input="formatInput('nama')"
+                    required
+                    placeholder="Contoh: ODP-BPN-01"
+                  />
+                </div>
+
+                <!-- KOTA -->
+                <div class="form-group full-width">
+                  <label>KOTA</label>
+
+                  <input
+                    type="text"
+                    x-model="form.kota"
+                    @input="formatInput('kota')"
+                    placeholder="Contoh: BALIKPAPAN"
+                  />
+                </div>
+
+                <!-- LEVEL -->
+                <div class="form-group">
+                  <label>LEVEL</label>
+
+                  <select x-model="form.level">
+                    <option value="Level 1">Level 1</option>
+                    <option value="Level 2">Level 2</option>
+                  </select>
+                </div>
+
+                <!-- LATLONG -->
+                <div class="form-group">
+                  <label>LATLONG</label>
+
+                  <input
+                    type="text"
+                    x-model="form.latlong"
+                    @input="formatInput('latlong')"
+                    placeholder="-1.23, 116.45"
+                  />
+                </div>
+
+                <!-- AREA -->
+                <div class="form-group">
+                  <label>AREA</label>
+
+                  <select x-model="form.area" @change="form.cluster = ''">
+                    <option value="">Pilih Area</option>
+                    <option value="EKO">EKO</option>
+                    <option value="WKO">WKO</option>
+                  </select>
+                </div>
+
+                <!-- CLUSTER -->
+                <div class="form-group">
+                  <label>CLUSTER</label>
+
+                  <select x-model="form.cluster">
+                    <option value="">Pilih Cluster</option>
+
+                    <template x-if="form.area === 'EKO'">
+                      <template
+                        x-for="c in ['TANJUNG SELOR', 'BALIKPAPAN', 'SAMARINDA', 'BANJARMASIN']"
+                      >
+                        <option :value="c" x-text="c"></option>
+                      </template>
+                    </template>
+
+                    <template x-if="form.area === 'WKO'">
+                      <template x-for="c in ['PONTIANAK', 'PALANGKARAYA']">
+                        <option :value="c" x-text="c"></option>
+                      </template>
+                    </template>
+                  </select>
+                </div>
+              </div>
             </div>
 
-            <div style="grid-column: span 2" class="form-group">
-              <label>KOTA</label>
-              <input
-                type="text"
-                x-model="form.kota"
-                @input="formatInput('kota')"
-                placeholder="Contoh: BALIKPAPAN"
-              />
-            </div>
-            <div class="form-group">
-              <label>LEVEL</label>
-              <select x-model="form.level">
-                <option value="Level 1">Level 1</option>
-                <option value="Level 2">Level 2</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>LATLONG</label>
-              <input
-                type="text"
-                x-model="form.latlong"
-                @input="formatInput('latlong')"
-                placeholder="-1.23, 116.45"
-              />
-            </div>
-            <div class="form-group">
-              <label>AREA</label>
-              <select x-model="form.area" @change="form.cluster = ''">
-                <option value="">Pilih Area</option>
-                <option value="EKO">EKO</option>
-                <option value="WKO">WKO</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>CLUSTER</label>
-              <select x-model="form.cluster">
-                <option value="">Pilih Cluster</option>
-                <template x-if="form.area === 'EKO'">
-                  <template
-                    x-for="c in ['TANJUNG SELOR', 'BALIKPAPAN', 'SAMARINDA', 'BANJARMASIN']"
-                  >
-                    <option :value="c" x-text="c"></option>
-                  </template>
-                </template>
-                <template x-if="form.area === 'WKO'">
-                  <template x-for="c in ['PONTIANAK', 'PALANGKARAYA']">
-                    <option :value="c" x-text="c"></option>
-                  </template>
-                </template>
-              </select>
-            </div>
-          </div>
+            <!-- PORT SECTION -->
+            <div class="tech-section modern-tech-section">
+              <div class="section-header">
+                <h3>PORT ASSIGNMENT</h3>
 
-          <div class="tech-section">
-            <h3>Port Assignment (In & Out)</h3>
-            <div
-              style="
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 0.5rem;
-                margin-bottom: 1rem;
-              "
-            >
-              <input
-                type="text"
-                class="dark-input"
-                placeholder="Input 1"
-                x-model="form.in1"
-                @input="formatInput('in1')"
-              />
-              <input
-                type="text"
-                class="dark-input"
-                placeholder="Input 2"
-                x-model="form.in2"
-                @input="formatInput('in2')"
-              />
-            </div>
-            <div
-              style="
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 0.5rem;
-              "
-            >
-              <template x-for="i in 8">
+                <span class="section-badge"> IN & OUT CONFIG </span>
+              </div>
+
+              <!-- INPUT -->
+              <div class="input-grid">
                 <input
                   type="text"
                   class="dark-input"
-                  :placeholder="'Port '+i"
-                  x-model="form['out'+i]"
-                  @input="formatInput('out'+i)"
+                  placeholder="Input 1"
+                  x-model="form.in1"
+                  @input="formatInput('in1')"
                 />
-              </template>
-            </div>
-          </div>
 
-          <button
-            type="submit"
-            style="
-              width: 100%;
-              background: var(--primary);
-              color: white;
-              border: none;
-              padding: 1.2rem;
-              border-radius: 1rem;
-              font-weight: 900;
-              margin-top: 1.5rem;
-              cursor: pointer;
-            "
-          >
-            SIMPAN PERUBAHAN
-          </button>
-        </form>
+                <input
+                  type="text"
+                  class="dark-input"
+                  placeholder="Input 2"
+                  x-model="form.in2"
+                  @input="formatInput('in2')"
+                />
+              </div>
+
+              <!-- OUTPUT -->
+              <div class="port-input-grid">
+                <template x-for="i in 8" :key="i">
+                  <div class="port-input-wrapper">
+                    <div class="port-label-modern">
+                      PORT <span x-text="i"></span>
+                    </div>
+
+                    <input
+                      type="text"
+                      class="dark-input"
+                      :placeholder="'Port '+i"
+                      x-model="form['out'+i]"
+                      @input="formatInput('out'+i)"
+                    />
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- BUTTON -->
+            <button type="submit" class="btn-submit-modern">
+              SIMPAN PERUBAHAN
+            </button>
+          </form>
+        </div>
       </div>
     </div>
 
@@ -665,111 +776,231 @@
       </div>
     </div>
 
-    <div x-show="viewOpen" x-cloak class="modal-overlay">
-      <div class="modal-content" style="max-width: 450px">
-        <div style="text-align: center; margin-bottom: 1.5rem">
-          <h2
-            style="font-weight: 900; margin-bottom: 5px"
-            x-text="viewItem.nama"
-          ></h2>
-          <span
-            style="
-              background: #eff6ff;
-              color: var(--primary);
-              padding: 0.4rem 1rem;
-              border-radius: 2rem;
-              font-size: 0.75rem;
-              font-weight: 900;
-            "
-            x-text="viewItem.level"
-          ></span>
+    <div
+      x-show="viewOpen"
+      x-cloak
+      class="modal-overlay"
+      @click.self="viewOpen = false"
+      @keydown.escape.window="viewOpen = false"
+    >
+      <div class="modal-content view-modal">
+        <!-- HEADER -->
+        <div class="view-header">
+          <div>
+            <h2 x-text="viewItem.nama"></h2>
+
+            <span class="view-badge" x-text="viewItem.level"></span>
+          </div>
+
+          <!-- CLOSE -->
+          <button @click="viewOpen = false" class="modal-close-btn">
+            &times;
+          </button>
         </div>
-        <div
-          style="
-            background: #f8fafc;
-            padding: 1.5rem;
-            border-radius: 1.25rem;
-            font-size: 0.85rem;
-            border: 1px solid #e2e8f0;
-          "
-        >
-          <div style="margin-bottom: 10px">
-            <b>Area:</b> <span x-text="viewItem.area || '-'"></span>
-          </div>
-          <div style="margin-bottom: 10px">
-            <b>Cluster:</b> <span x-text="viewItem.cluster || '-'"></span>
-          </div>
-          <div style="margin-bottom: 10px">
-            <b>Latlong:</b> <span x-text="viewItem.latlong || '-'"></span>
-          </div>
-          <hr
-            style="border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0"
-          />
-          <div style="margin-bottom: 5px">
-            <b>In 1:</b> <span x-text="viewItem.in1 || '-'"></span>
-          </div>
-          <div style="margin-bottom: 15px">
-            <b>In 2:</b> <span x-text="viewItem.in2 || '-'"></span>
-          </div>
-          <b>Out Ports:</b>
-          <div
-            style="
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 8px;
-              margin-top: 8px;
-            "
-          >
-            <template x-for="i in 8">
-              <div
-                style="
-                  background: white;
-                  padding: 5px 10px;
-                  border-radius: 0.5rem;
-                  border: 1px solid #e2e8f0;
-                "
-              >
-                P<span x-text="i"></span>:
-                <span
-                  x-text="viewItem['out'+i] || '-'"
-                  style="font-weight: bold; color: var(--primary)"
-                ></span>
+
+        <!-- CONTENT -->
+        <div class="view-body">
+          <!-- BASIC INFO -->
+          <div class="view-info">
+            <!-- AREA -->
+            <div class="copy-field">
+              <div class="copy-value">
+                <b>Area:</b>
+                <span x-text="viewItem.area || '-'"></span>
               </div>
-            </template>
-            <div class="mt-4">
-              <label
-                class="block text-gray-500 text-[10px] font-bold mb-2 uppercase"
-                ><b>Status Port Output</b></label
+
+              <button
+                class="copy-btn"
+                @click="copyText(viewItem.area)"
+                title="Copy"
               >
-              <div class="port-grid">
-                <template x-for="i in 8" :key="i">
-                  <div
-                    :class="viewItem['out' + i] ? 'port-item bg-occupied' : 'port-item bg-available'"
-                  >
-                    <div style="opacity: 0.7">P-<span x-text="i"></span></div>
-                    <div x-text="viewItem['out' + i] ? 'FILL' : 'EMPTY'"></div>
-                  </div>
-                </template>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 10h6a2 2 0 002-2v-8a2 2 0 00-2-2h-6a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <!-- CLUSTER -->
+            <div class="copy-field">
+              <div class="copy-value">
+                <b>Cluster:</b>
+                <span x-text="viewItem.cluster || '-'"></span>
               </div>
+
+              <button
+                class="copy-btn"
+                @click="copyText(viewItem.cluster)"
+                title="Copy"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 10h6a2 2 0 002-2v-8a2 2 0 00-2-2h-6a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <!-- LATLONG -->
+            <div class="copy-field">
+              <div class="copy-value">
+                <b>Latlong:</b>
+                <span x-text="viewItem.latlong || '-'"></span>
+              </div>
+
+              <button
+                class="copy-btn"
+                @click="copyText(viewItem.latlong)"
+                title="Copy"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 10h6a2 2 0 002-2v-8a2 2 0 00-2-2h-6a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
+
+          <hr class="view-divider" />
+
+          <!-- IN PORT -->
+          <div class="view-in">
+            <!-- IN1 -->
+            <div class="copy-field">
+              <div class="copy-value">
+                <b>In 1:</b>
+                <span x-text="viewItem.in1 || '-'"></span>
+              </div>
+
+              <button
+                class="copy-btn"
+                @click="copyText(viewItem.in1)"
+                title="Copy"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 10h6a2 2 0 002-2v-8a2 2 0 00-2-2h-6a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <!-- IN2 -->
+            <div class="copy-field">
+              <div class="copy-value">
+                <b>In 2:</b>
+                <span x-text="viewItem.in2 || '-'"></span>
+              </div>
+
+              <button
+                class="copy-btn"
+                @click="copyText(viewItem.in2)"
+                title="Copy"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 10h6a2 2 0 002-2v-8a2 2 0 00-2-2h-6a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- OUT PORT -->
+          <div class="section-title">Out Ports</div>
+
+          <div class="out-grid">
+            <template x-for="i in 8" :key="i">
+              <div class="out-card">
+                <div class="out-label">P<span x-text="i"></span></div>
+
+                <div class="copy-field">
+                  <div
+                    class="out-value copy-value"
+                    x-text="viewItem['out'+i] || '-'"
+                  ></div>
+
+                  <button
+                    class="copy-btn"
+                    @click="copyText(viewItem['out'+i])"
+                    title="Copy"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 10h6a2 2 0 002-2v-8a2 2 0 00-2-2h-6a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- STATUS -->
+          <div class="section-title mt-space">Status Port Output</div>
+
+          <div class="port-grid">
+            <template x-for="i in 8" :key="i">
+              <div
+                :class="viewItem['out' + i] ? 'port-item bg-occupied' : 'port-item bg-available'"
+              >
+                <div class="port-small">P-<span x-text="i"></span></div>
+
+                <div x-text="viewItem['out' + i] ? 'FILL' : 'EMPTY'"></div>
+              </div>
+            </template>
+          </div>
         </div>
-        <button
-          @click="viewOpen = false"
-          style="
-            width: 100%;
-            background: #f1f5f9;
-            color: #475569;
-            border: none;
-            padding: 1rem;
-            border-radius: 1rem;
-            font-weight: 800;
-            margin-top: 1.5rem;
-            cursor: pointer;
-          "
-        >
-          TUTUP
-        </button>
       </div>
     </div>
   </body>

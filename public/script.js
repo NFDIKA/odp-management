@@ -23,6 +23,30 @@ const CustomSwal = Swal.mixin({
 
 function odpApp() {
   return {
+    // THEME
+
+    darkMode: localStorage.getItem("theme") === "dark",
+
+    init() {
+      this.applyTheme();
+      this.fetchData();
+    },
+
+    applyTheme() {
+      if (this.darkMode) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    },
+
+    toggleTheme() {
+      this.darkMode = !this.darkMode;
+
+      localStorage.setItem("theme", this.darkMode ? "dark" : "light");
+
+      this.applyTheme();
+    },
     // --- STATE DATA ---
     odps: [],
     searchQuery: "",
@@ -53,7 +77,17 @@ function odpApp() {
       out8: "",
     },
     viewItem: {},
+    currentPage: 1,
+    itemsPerPage: 10,
 
+    resetFilters() {
+      this.filterStatus = "";
+      this.filterArea = "";
+      this.filterCluster = "";
+      this.filterKota = "";
+      this.searchQuery = "";
+      this.currentPage = 1;
+    },
     // --- FUNGSI CABUT LAYANAN ---
     // Di dalam return { ... } odpApp
     async findAndConfirmCabut() {
@@ -159,6 +193,27 @@ function odpApp() {
         ); // Sertakan matchesKota dalam kondisi return
       });
     },
+
+    // --- LOGIKA PAGINASI ---
+    get paginatedOdps() {
+      if (this.currentPage > this.totalPages) {
+        this.currentPage = 1;
+      }
+
+      const perPage = Number(this.itemsPerPage);
+
+      const start = (this.currentPage - 1) * perPage;
+      const end = start + perPage;
+
+      return this.filteredOdps.slice(start, end);
+    },
+
+    get totalPages() {
+      return Math.max(
+        1,
+        Math.ceil(this.filteredOdps.length / Number(this.itemsPerPage)),
+      );
+    },
     // --- FUNGSI HELPER ---
     getUtilization(item) {
       const ports = [
@@ -210,7 +265,11 @@ function odpApp() {
     async fetchData() {
       try {
         const res = await fetch("/api/odp");
+
         this.odps = await res.json();
+
+        console.log("TOTAL DATA:", this.odps.length);
+        console.log("DATA:", this.odps);
       } catch (error) {
         console.error("Gagal mengambil data:", error);
       }
@@ -240,6 +299,26 @@ function odpApp() {
       const coords = latlong.trim().replace(/\s/g, "");
       const url = `https://www.google.com/maps/search/?api=1&query=${coords}`;
       window.open(url, "_blank");
+    },
+
+    // Fungsi untuk memeriksa duplikasi secara global di seluruh field yang relevan
+    async copyText(text) {
+      if (!text) return;
+
+      try {
+        await navigator.clipboard.writeText(text);
+
+        Toast.fire({
+          toast: true,
+          position: "top-end",
+          icon: "success",
+          title: "Copied",
+          showConfirmButton: false,
+          timer: 1200,
+        });
+      } catch (err) {
+        console.error("Copy gagal", err);
+      }
     },
 
     openModal() {
