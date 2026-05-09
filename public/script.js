@@ -23,6 +23,159 @@ const CustomSwal = Swal.mixin({
 
 function odpApp() {
   return {
+    // --- STATE DATA USER & ADMIN ---
+    userModal: false,
+
+    // Ambil username dan role dari localStorage
+    currentUsername: localStorage.getItem("username") || "",
+    userRole: JSON.parse(localStorage.getItem("user") || "{}").role || "read",
+
+    users: [],
+    userForm: {
+      username: "",
+      password: "",
+      nama: "",
+      privilage: "read",
+      organisasi: "",
+    },
+
+    // Fungsi mengambil data user dari server
+    async fetchUsers() {
+      // Proteksi: Hanya admin yang boleh fetch data user
+      if (this.currentUsername !== "admin") return;
+
+      try {
+        const res = await fetch("/api/admin/users", {
+          headers: { Authorization: localStorage.getItem("token") },
+        });
+        if (res.ok) {
+          this.users = await res.json();
+        }
+      } catch (err) {
+        console.error("Gagal load users:", err);
+      }
+    },
+
+    idleTimeout: null,
+    // Set waktu idle dalam milidetik (contoh: 15 menit = 15 * 60 * 1000)
+    IDLE_LIMIT: 15 * 60 * 1000,
+
+    init() {
+      // Panggil fungsi ini saat aplikasi dimuat
+      this.resetIdleTimer();
+      this.setupIdleListeners();
+    },
+
+    setupIdleListeners() {
+      // Daftar aktivitas yang dianggap "aktif"
+      const events = [
+        "mousedown",
+        "mousemove",
+        "keypress",
+        "scroll",
+        "touchstart",
+      ];
+
+      events.forEach((name) => {
+        document.addEventListener(name, () => this.resetIdleTimer(), true);
+      });
+    },
+
+    resetIdleTimer() {
+      // Hapus timer yang lama jika ada
+      if (this.idleTimeout) clearTimeout(this.idleTimeout);
+
+      // Buat timer baru
+      this.idleTimeout = setTimeout(() => {
+        this.logoutUser("Sesi berakhir karena tidak ada aktivitas.");
+      }, this.IDLE_LIMIT);
+    },
+
+    async logoutUser(message = "Berhasil logout") {
+      // Hapus semua data di localStorage
+      localStorage.clear();
+
+      await CustomSwal.fire({
+        icon: "info",
+        title: "Sesi Berakhir",
+        text: message,
+        timer: 3000,
+        showConfirmButton: false,
+      });
+
+      window.location.href = "login.html";
+    },
+
+    // Fungsi tambah user
+    async addUser() {
+      if (!this.userForm.username || !this.userForm.password) {
+        return CustomSwal.fire(
+          "Error",
+          "Username dan Password wajib diisi",
+          "error",
+        );
+      }
+
+      try {
+        const res = await fetch("/api/admin/add-user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: localStorage.getItem("token"),
+          },
+          body: JSON.stringify(this.userForm),
+        });
+
+        if (res.ok) {
+          CustomSwal.fire("Berhasil", "User berhasil ditambahkan", "success");
+          this.fetchUsers(); // Refresh list
+          this.userForm = {
+            username: "",
+            password: "",
+            nama: "",
+            privilage: "read",
+            organisasi: "",
+          };
+        } else {
+          const err = await res.json();
+          CustomSwal.fire("Gagal", err.message, "error");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    },
+
+    // Fungsi hapus user
+    async deleteUser(id, username) {
+      const confirm = await CustomSwal.fire({
+        title: "Hapus User?",
+        text: `Yakin ingin menghapus akses ${username}?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Ya, Hapus!",
+        cancelButtonText: "Batal",
+      });
+
+      if (confirm.isConfirmed) {
+        try {
+          const res = await fetch(`/api/admin/users/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: localStorage.getItem("token") },
+          });
+          if (res.ok) {
+            this.fetchUsers();
+            CustomSwal.fire(
+              "Terhapus",
+              "User telah dihapus dari sistem",
+              "success",
+            );
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    },
+
     // Tambahkan di dalam return { ... } pada script.js
     calculateDistance(lat1, lon1, lat2, lon2) {
       const R = 6371e3; // Radius bumi dalam meter
@@ -37,6 +190,22 @@ function odpApp() {
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
       return R * c; // Hasil dalam meter
+    },
+
+    currentUser: JSON.parse(localStorage.getItem("user") || "{}"),
+
+    get userRole() {
+      return this.currentUser.role || this.currentUser.privilage || "";
+    },
+
+    doLogout() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "login.html";
+    },
+
+    async changePassword(newPass) {
+      // API Call ke backend untuk update password user yang sedang login
     },
     // --- STATE DATA ---
     odps: [],
@@ -282,6 +451,22 @@ function odpApp() {
       document.body.removeChild(a);
     },
 
+    // Contoh di script.js
+    async saveODP() {
+      const res = await fetch("/api/odp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: localStorage.getItem("token"), // Kirim token login
+        },
+        body: JSON.stringify({
+          ...this.formData,
+          updatedBy: this.currentUser.nama, // Nama dari session login
+          updatedAt: new Date().toISOString(),
+        }),
+      });
+    },
+
     // --- LOGIKA FILTERING (Pusat Kendali Tabel) ---
     get filteredOdps() {
       if (!this.odps) return [];
@@ -392,7 +577,32 @@ function odpApp() {
     // --- ACTION HANDLERS ---
     async fetchData() {
       try {
-        const res = await fetch("/api/odp");
+        // Ambil token dari localStorage
+        const token = localStorage.getItem("token");
+
+        // Jika tidak ada token, arahkan kembali ke login
+        if (!token) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        const res = await fetch("/api/odp", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token, // Kirim token untuk verifikasi
+          },
+        });
+
+        // Jika server merespon Unauthorized atau Forbidden
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          window.location.href = "login.html";
+          return;
+        }
+
+        if (!res.ok) throw new Error("Gagal mengambil data dari server");
 
         this.odps = await res.json();
 
@@ -400,6 +610,10 @@ function odpApp() {
         console.log("DATA:", this.odps);
       } catch (error) {
         console.error("Gagal mengambil data:", error);
+        // Tampilkan notifikasi error ke user jika perlu
+        if (typeof CustomSwal !== "undefined") {
+          CustomSwal.fire("Error", "Gagal memuat data ODP", "error");
+        }
       }
     },
 

@@ -1,5 +1,11 @@
 <!doctype html>
 <html lang="id">
+  <script>
+    // Cek apakah token ada di localStorage
+    if (!localStorage.getItem("token")) {
+      window.location.href = "login.html";
+    }
+  </script>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,7 +24,17 @@
     <script src="script.js"></script>
   </head>
   <body x-data="odpApp()" x-init="fetchData()">
-    <nav class="glass-nav">
+    <nav
+      class="glass-nav"
+      style="
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1.5rem;
+        width: 100%;
+        box-sizing: border-box;
+      "
+    >
       <div style="display: flex; align-items: center; gap: 1rem">
         <div
           style="
@@ -30,6 +46,7 @@
             align-items: center;
             justify-content: center;
             color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
           "
         >
           <svg
@@ -42,48 +59,127 @@
             <path stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
           </svg>
         </div>
-        <h1 style="font-size: 1.2rem; margin: 0; font-weight: 900">
+        <h1
+          style="
+            font-size: 1.4rem;
+            margin: 0;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+          "
+        >
           FiberFlow
         </h1>
       </div>
 
-      <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem">
-        <button
-          @click="coverageModal = true"
-          class="btn"
+      <div style="display: flex; align-items: center; gap: 0.75rem">
+        <div
           style="
-            background: #6366f1;
-            color: white;
-            font-weight: 800;
-            border-radius: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding-right: 0.75rem;
+            margin-right: 0.25rem;
           "
         >
-          🔍 CEK COVERAGE
-        </button>
+          <button
+            @click="coverageModal = true"
+            class="btn"
+            style="
+              background: #6366f1;
+              color: white;
+              font-weight: 700;
+              border-radius: 10px;
+              padding: 0.6rem 1rem;
+              font-size: 0.85rem;
+              border: none;
+              cursor: pointer;
+            "
+          >
+            🔍 CEK COVERAGE
+          </button>
+          <template x-if="currentUsername === 'admin' && userRole === 'full'">
+            <button
+              @click="userModal = true; fetchUsers()"
+              class="btn"
+              style="
+                background: #417ed5;
+                color: white;
+                font-weight: 700;
+                padding: 0.6rem 1rem;
+                border-radius: 10px;
+                font-size: 0.85rem;
+                border: none;
+                cursor: pointer;
+              "
+            >
+              👥 USERS
+            </button>
+          </template>
+          <template x-if="userRole === 'full'">
+            <div style="display: flex; gap: 0.5rem">
+              <button
+                @click="cabutModal = true"
+                class="btn btn-cabut"
+                style="
+                  font-weight: 700;
+                  padding: 0.6rem 1rem;
+                  border-radius: 10px;
+                  font-size: 0.85rem;
+                "
+              >
+                🛑 FORM CABUT
+              </button>
+              <button
+                @click="openModal()"
+                class="btn btn-primary"
+                style="
+                  font-weight: 700;
+                  padding: 0.6rem 1rem;
+                  border-radius: 10px;
+                  font-size: 0.85rem;
+                "
+              >
+                ➕ NEW ODP
+              </button>
+            </div>
+          </template>
+        </div>
 
-        <button
-          @click="cabutModal = true"
-          class="btn btn-cabut"
-          style="
-            font-weight: 800;
-            padding: 0.6rem 1.2rem;
-            border-radius: 0.8rem;
-          "
-        >
-          🛑 FORM CABUT
-        </button>
+        <div style="display: flex; align-items: center; gap: 1rem">
+          <div style="text-align: right; line-height: 1.2">
+            <div
+              style="font-weight: 800; font-size: 0.9rem; color: #f8fafc"
+              x-text="currentUser.nama"
+            ></div>
+            <div
+              style="
+                font-size: 0.65rem;
+                color: #94a3b8;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              "
+              x-text="currentUser.role"
+            ></div>
+          </div>
 
-        <button
-          @click="openModal()"
-          class="btn btn-primary"
-          style="
-            font-weight: 800;
-            padding: 0.6rem 1.2rem;
-            border-radius: 0.8rem;
-          "
-        >
-          ➕ NEW ODP
-        </button>
+          <button
+            @click="logoutUser('Anda telah logout.')"
+            class="btn"
+            style="
+              background: rgba(239, 68, 68, 0.1);
+              color: #ef4444;
+              border: 1px solid rgba(239, 68, 68, 0.2);
+              font-weight: 700;
+              padding: 0.5rem 0.8rem;
+              border-radius: 8px;
+              font-size: 0.8rem;
+              transition: all 0.2s;
+            "
+          >
+            Log Out
+          </button>
+        </div>
       </div>
     </nav>
 
@@ -184,7 +280,6 @@
           ></div>
         </div>
       </div>
-
       <div
         style="
           background: #f8fafc;
@@ -202,13 +297,15 @@
             margin-bottom: 1rem;
           "
         >
-          <button
-            @click="exportToExcel()"
-            class="btn btn-excel"
-            title="Download data ke Excel"
-          >
-            Export XLSX
-          </button>
+          <template x-if="userRole === 'full'">
+            <button
+              @click="exportToExcel()"
+              class="btn btn-excel"
+              title="Download data ke Excel"
+            >
+              Export XLSX
+            </button>
+          </template>
           <button
             @click="downloadTemplate()"
             class="btn btn-excel"
@@ -217,19 +314,21 @@
           >
             Download Template
           </button>
-          <label
-            class="btn btn-excel"
-            style="background: #2b5797; cursor: pointer"
-            title="Upload data dari Excel"
-          >
-            Import XLSX
-            <input
-              type="file"
-              @change="importFromExcel($event)"
-              style="display: none"
-              accept=".xlsx, .xls"
-            />
-          </label>
+          <template x-if="userRole === 'full'">
+            <label
+              class="btn btn-excel"
+              style="background: #2b5797; cursor: pointer"
+              title="Upload data dari Excel"
+            >
+              Import XLSX
+              <input
+                type="file"
+                @change="importFromExcel($event)"
+                style="display: none"
+                accept=".xlsx, .xls"
+              />
+            </label>
+          </template>
         </div>
 
         <div
@@ -1187,6 +1286,146 @@
               </div>
             </div>
           </template>
+        </div>
+      </div>
+    </div>
+
+    <div
+      x-show="userModal"
+      x-cloak
+      class="user-modal-overlay"
+      @click.self="userModal = false"
+      @keydown.escape.window="userModal = false"
+    >
+      <div class="user-modal-content">
+        <!-- HEADER -->
+        <div class="form-modal-header">
+          <div>
+            <h2 class="form-title">👥 User Access Management</h2>
+            <p class="form-subtitle">Kelola user, role, dan akses sistem</p>
+          </div>
+
+          <button
+            type="button"
+            @click="userModal = false"
+            class="modal-close-btn"
+          >
+            &times;
+          </button>
+        </div>
+
+        <!-- BODY -->
+        <div class="form-body">
+          <!-- FORM -->
+          <div class="form-section">
+            <div class="section-header">
+              <h3>➕ Tambah Akun Baru</h3>
+              <span class="section-badge">FORM USER</span>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label>USERNAME</label>
+                <input
+                  type="text"
+                  x-model="userForm.username"
+                  placeholder="Username"
+                />
+              </div>
+
+              <div class="form-group">
+                <label>PASSWORD</label>
+                <input
+                  type="password"
+                  x-model="userForm.password"
+                  placeholder="Password"
+                />
+              </div>
+
+              <div class="form-group">
+                <label>NAMA LENGKAP</label>
+                <input
+                  type="text"
+                  x-model="userForm.nama"
+                  placeholder="Nama Lengkap"
+                />
+              </div>
+
+              <div class="form-group">
+                <label>PRIVILEGE</label>
+                <select x-model="userForm.privilage">
+                  <option value="read">READ ONLY</option>
+                  <option value="full">FULL ACCESS</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>UNIT</label>
+                <input
+                  type="text"
+                  x-model="userForm.organisasi"
+                  placeholder="Unit / Organisasi"
+                />
+              </div>
+
+              <div class="form-group full-width">
+                <button @click="addUser()" class="btn-submit-modern">
+                  SIMPAN USER
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TABLE -->
+          <div class="table-section">
+            <div class="section-header">
+              <h3>LIST USER</h3>
+              <span class="section-badge">DATABASE</span>
+            </div>
+
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>USERNAME</th>
+                    <th>NAMA</th>
+                    <th>PRIVILEGE</th>
+                    <th>UNIT</th>
+                    <th style="text-align: center">AKSI</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <template x-for="user in users" :key="user.id">
+                    <tr>
+                      <td class="text-bold" x-text="user.username"></td>
+                      <td x-text="user.nama"></td>
+
+                      <td>
+                        <span
+                          class="badge"
+                          :class="user.privilage === 'full' ? 'badge-success' : 'badge-info'"
+                          x-text="user.privilage"
+                        ></span>
+                      </td>
+
+                      <td x-text="user.organisasi"></td>
+
+                      <td style="text-align: center">
+                        <button
+                          x-show="user.username !== 'admin'"
+                          @click="deleteUser(user.id, user.username)"
+                          class="btn-danger-small"
+                        >
+                          HAPUS
+                        </button>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>

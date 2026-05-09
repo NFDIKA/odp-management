@@ -1,1 +1,74 @@
-[]
+[
+  {
+    "timestamp": "2026-05-09T03:16:11.647Z",
+    "action": "ADD_USER",
+    "user": "Super Admin",
+    "detail": "Menambah user baru: aoe"
+  },
+  {
+    "timestamp": "2026-05-09T03:16:56.521Z",
+    "action": "ADD_USER",
+    "user": "Super Admin",
+    "detail": "Menambah user baru: abc"
+  },
+  {
+    "timestamp": "2026-05-09T03:46:07.099Z",
+    "action": "UPDATE_ODP",
+    "user": "ADIKA",
+    "detail": "Update data ODP ODP A"
+  },
+  {
+    "timestamp": "2026-05-09T03:52:36.207Z",
+    "action": "DELETE_ODP",
+    "user": "ADIKA",
+    "detail": "Menghapus ODP ODP A"
+  },
+  {
+    "timestamp": "2026-05-09T03:52:38.717Z",
+    "action": "DELETE_ODP",
+    "user": "ADIKA",
+    "detail": "Menghapus ODP ODP B"
+  },
+  {
+    "timestamp": "2026-05-09T03:52:43.152Z",
+    "action": "DELETE_ODP",
+    "user": "ADIKA",
+    "detail": "Menghapus ODP ODP MAIN"
+  },
+  {
+    "timestamp": "2026-05-09T03:54:13.192Z",
+    "action": "CREATE_ODP",
+    "user": "TES",
+    "detail": "Menambah ODP TES"
+  },
+  {
+    "timestamp": "2026-05-09T04:01:03.567Z",
+    "action": "UPDATE_ODP",
+    "user": "TES",
+    "detail": "Update data ODP TES"
+  },
+  {
+    "timestamp": "2026-05-09T04:01:54.007Z",
+    "action": "CREATE_ODP",
+    "user": "TES",
+    "detail": "Menambah ODP BBB"
+  },
+  {
+    "timestamp": "2026-05-09T04:01:58.452Z",
+    "action": "DELETE_ODP",
+    "user": "TES",
+    "detail": "Menghapus ODP BBB"
+  },
+  {
+    "timestamp": "2026-05-09T04:02:01.997Z",
+    "action": "DELETE_ODP",
+    "user": "TES",
+    "detail": "Menghapus ODP TES"
+  },
+  {
+    "timestamp": "2026-05-09T04:05:12.299Z",
+    "action": "CREATE_ODP",
+    "user": "TES",
+    "detail": "Menambah ODP 111"
+  }
+]
