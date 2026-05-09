@@ -220,44 +220,51 @@ function odpApp() {
       return "#10b981"; // Hijau
     },
 
-    // Update di dalam return { ... } pada script.js
     downloadKMZ(odp) {
-      if (!this.customerLatLong) return;
+      if (!this.customerLatLong) {
+        CustomSwal.fire("Info", "Tentukan lokasi pelanggan dulu", "info");
+        return;
+      }
 
-      // Ambil koordinat pelanggan (Origin)
       const [custLat, custLong] = this.customerLatLong
         .split(",")
         .map((n) => n.trim());
-      // Ambil koordinat ODP (Destination)
       const [odpLat, odpLong] = odp.latlong.split(",").map((n) => n.trim());
 
-      // Struktur KML untuk Garis Rute (LineString)
+      // KML yang menginstruksikan Google untuk membuat rute jalan
       const kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
-    <name>Rute ke ${odp.nama}</name>
-    <Style id="routeLine">
-      <LineStyle>
-        <color>ff0000ff</color> <width>4</width>
-      </LineStyle>
+    <name>Rute Ke ${odp.nama}</name>
+    <description>Klik pada 'Jalur Navigasi' untuk melihat rute di Google Maps</description>
+    
+    <Style id="routeStyle">
+      <LineStyle><color>ff0000ff</color><width>5</width></LineStyle>
     </Style>
+
     <Placemark>
-      <name>Titik Pelanggan</name>
+      <name>LOKASI PELANGGAN</name>
       <Point><coordinates>${custLong},${custLat},0</coordinates></Point>
     </Placemark>
+
     <Placemark>
-      <name>${odp.nama}</name>
+      <name>ODP: ${odp.nama}</name>
       <Point><coordinates>${odpLong},${odpLat},0</coordinates></Point>
     </Placemark>
+
     <Placemark>
-      <name>Jalur Penarikan Kabel</name>
-      <styleUrl>#routeLine</styleUrl>
+      <name>KLIK DISINI UNTUK RUTE JALAN</name>
+      <description>
+        <![CDATA[
+          <a href="https://www.google.com/maps/dir/?api=1&origin=${custLat},${custLong}&destination=${odpLat},${odpLong}&travelmode=driving">
+            Buka Navigasi Jalur Kabel di Google Maps
+          </a>
+        ]]>
+      </description>
+      <styleUrl>#routeStyle</styleUrl>
       <LineString>
         <tessellate>1</tessellate>
-        <coordinates>
-          ${custLong},${custLat},0
-          ${odpLong},${odpLat},0
-        </coordinates>
+        <coordinates>${custLong},${custLat},0 ${odpLong},${odpLat},0</coordinates>
       </LineString>
     </Placemark>
   </Document>
@@ -269,10 +276,9 @@ function odpApp() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Rute_Pelanggan_ke_${odp.nama.replace(/\s+/g, "_")}.kml`;
+      a.download = `RUTE_${odp.nama.replace(/\s+/g, "_")}.kml`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     },
 
