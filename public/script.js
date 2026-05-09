@@ -23,29 +23,20 @@ const CustomSwal = Swal.mixin({
 
 function odpApp() {
   return {
-    // THEME
+    // Tambahkan di dalam return { ... } pada script.js
+    calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371e3; // Radius bumi dalam meter
+      const φ1 = (lat1 * Math.PI) / 180;
+      const φ2 = (lat2 * Math.PI) / 180;
+      const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+      const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
-    darkMode: localStorage.getItem("theme") === "dark",
+      const a =
+        Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+        Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-    init() {
-      this.applyTheme();
-      this.fetchData();
-    },
-
-    applyTheme() {
-      if (this.darkMode) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-    },
-
-    toggleTheme() {
-      this.darkMode = !this.darkMode;
-
-      localStorage.setItem("theme", this.darkMode ? "dark" : "light");
-
-      this.applyTheme();
+      return R * c; // Hasil dalam meter
     },
     // --- STATE DATA ---
     odps: [],
@@ -76,6 +67,9 @@ function odpApp() {
       out7: "",
       out8: "",
     },
+    coverageModal: false,
+    customerLatLong: "",
+    nearbyOdps: [],
     viewItem: {},
     currentPage: 1,
     itemsPerPage: 10,
@@ -154,6 +148,134 @@ function odpApp() {
         );
       }
     },
+
+    // Fungsi Proses Coverage
+    checkCoverage() {
+      if (!this.customerLatLong.includes(",")) {
+        return CustomSwal.fire(
+          "Error",
+          "Format Latlong salah. Gunakan: lat, long",
+          "error",
+        );
+      }
+
+      const [custLat, custLong] = this.customerLatLong
+        .split(",")
+        .map((n) => parseFloat(n.trim()));
+
+      if (isNaN(custLat) || isNaN(custLong)) {
+        return CustomSwal.fire("Error", "Koordinat tidak valid", "error");
+      }
+
+      // Hitung jarak ke semua ODP
+      const mapped = this.odps.map((odp) => {
+        if (!odp.latlong) return { ...odp, distance: Infinity };
+        const [oLat, oLong] = odp.latlong
+          .split(",")
+          .map((n) => parseFloat(n.trim()));
+        return {
+          ...odp,
+          distance: this.calculateDistance(custLat, custLong, oLat, oLong),
+        };
+      });
+
+      // Urutkan dan ambil 5 terdekat
+      this.nearbyOdps = mapped
+        .filter((o) => o.distance !== Infinity)
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, 5);
+    },
+
+    // Fungsi Lihat Rute di Google Maps
+    viewRoute(odpLatLong) {
+      const origin = this.customerLatLong.trim().replace(/\s/g, "");
+      const destination = odpLatLong.trim().replace(/\s/g, "");
+      const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=walking`;
+      window.open(url, "_blank");
+    },
+
+    getAvailablePorts(odp) {
+      let occupied = 0;
+      for (let i = 1; i <= 8; i++) {
+        // Mencari field "out1" atau "Out 1" atau "OUT 1"
+        const key = "out" + i;
+        const alternativeKey = "Out " + i;
+        const value = odp[key] || odp[alternativeKey] || odp[key.toUpperCase()];
+
+        if (
+          value &&
+          value.toString().trim() !== "" &&
+          value.toString().trim() !== "-"
+        ) {
+          occupied++;
+        }
+      }
+      return 8 - occupied;
+    },
+
+    getDotColor(odp) {
+      const sisa = this.getAvailablePorts(odp);
+      if (sisa === 0) return "#ef4444"; // Merah
+      if (sisa <= 2) return "#f59e0b"; // Kuning/Oranye
+      return "#10b981"; // Hijau
+    },
+
+    // Update di dalam return { ... } pada script.js
+    downloadKMZ(odp) {
+      if (!this.customerLatLong) return;
+
+      // Ambil koordinat pelanggan (Origin)
+      const [custLat, custLong] = this.customerLatLong
+        .split(",")
+        .map((n) => n.trim());
+      // Ambil koordinat ODP (Destination)
+      const [odpLat, odpLong] = odp.latlong.split(",").map((n) => n.trim());
+
+      // Struktur KML untuk Garis Rute (LineString)
+      const kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Rute ke ${odp.nama}</name>
+    <Style id="routeLine">
+      <LineStyle>
+        <color>ff0000ff</color> <width>4</width>
+      </LineStyle>
+    </Style>
+    <Placemark>
+      <name>Titik Pelanggan</name>
+      <Point><coordinates>${custLong},${custLat},0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>${odp.nama}</name>
+      <Point><coordinates>${odpLong},${odpLat},0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>Jalur Penarikan Kabel</name>
+      <styleUrl>#routeLine</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          ${custLong},${custLat},0
+          ${odpLong},${odpLat},0
+        </coordinates>
+      </LineString>
+    </Placemark>
+  </Document>
+</kml>`;
+
+      const blob = new Blob([kmlContent], {
+        type: "application/vnd.google-earth.kml+xml",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Rute_Pelanggan_ke_${odp.nama.replace(/\s+/g, "_")}.kml`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    },
+
     // --- LOGIKA FILTERING (Pusat Kendali Tabel) ---
     get filteredOdps() {
       if (!this.odps) return [];

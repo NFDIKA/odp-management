@@ -49,6 +49,19 @@
 
       <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem">
         <button
+          @click="coverageModal = true"
+          class="btn"
+          style="
+            background: #6366f1;
+            color: white;
+            font-weight: 800;
+            border-radius: 0.8rem;
+          "
+        >
+          🔍 CEK COVERAGE
+        </button>
+
+        <button
           @click="cabutModal = true"
           class="btn btn-cabut"
           style="
@@ -456,7 +469,7 @@
                           ? 'dot-empty'
                           : getUtilization(item) >= 80
                           ? 'dot-critical'
-                          : getUtilization(item) >= 50
+                          : getUtilization(item) >= 75
                           ? 'dot-warning'
                           : 'dot-active'
                       "
@@ -1000,6 +1013,180 @@
               </div>
             </template>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div x-show="coverageModal" x-cloak class="modal-overlay">
+      <div class="modal-content" style="max-width: 600px">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+          "
+        >
+          <h2 style="margin: 0; font-weight: 900; color: #6366f1">
+            CEK COVERAGE PELANGGAN
+          </h2>
+          <button @click="coverageModal = false" class="modal-close-btn">
+            &times;
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label>TITIK KOORDINAT PELANGGAN (LAT, LONG)</label>
+          <div style="display: flex; gap: 10px">
+            <input
+              type="text"
+              x-model="customerLatLong"
+              placeholder="Contoh: -1.243, 116.854"
+              style="flex: 1"
+            />
+            <button @click="checkCoverage()" class="btn btn-primary">
+              PROSES
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem">
+          <template x-for="(odp, index) in nearbyOdps" :key="odp.id">
+            <div
+              style="
+                background: #f8fafc;
+                padding: 14px;
+                border-radius: 12px;
+                border: 1px solid #e2e8f0;
+                margin-bottom: 10px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <div style="display: flex; gap: 12px; align-items: center">
+                  <div
+                    :style="'width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; background:' + getDotColor(odp) + '; box-shadow: 0 0 8px ' + getDotColor(odp) + 'aa;'"
+                  ></div>
+
+                  <div>
+                    <div
+                      style="
+                        font-weight: 800;
+                        color: #1e293b;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        flex-wrap: wrap;
+                      "
+                    >
+                      <span x-text="odp.nama"></span>
+
+                      <div style="display: flex; align-items: center; gap: 6px">
+                        <span
+                          :style="{
+                  fontSize: '0.65rem',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  border: '1px solid',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  backgroundColor: getDotColor(odp) === '#10b981' ? '#d1fae5' : (getDotColor(odp) === '#f59e0b' ? '#fef3c7' : '#fee2e2'),
+                  color: getDotColor(odp) === '#10b981' ? '#065f46' : (getDotColor(odp) === '#f59e0b' ? '#92400e' : '#991b1b'),
+                  borderColor: getDotColor(odp)
+                }"
+                          x-text="getAvailablePorts(odp) + ' Port Sisa'"
+                        >
+                        </span>
+
+                        <div
+                          style="
+                            display: flex;
+                            gap: 2px;
+                            align-items: center;
+                            background: #f1f5f9;
+                            padding: 4px 6px;
+                            border-radius: 20px;
+                            border: 1px solid #e2e8f0;
+                          "
+                        >
+                          <template x-for="i in 8">
+                            <div
+                              class="indicator-dot"
+                              :class="
+                      !odp['out'+i] || odp['out'+i].trim() === '' || odp['out'+i] === '-'
+                        ? 'dot-empty'
+                        : getUtilization(odp) >= 80
+                        ? 'dot-critical'
+                        : getUtilization(odp) >= 50
+                        ? 'dot-warning'
+                        : 'dot-active'
+                    "
+                              style="width: 6px; height: 6px"
+                            ></div>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      style="font-size: 0.8rem; color: #64748b; margin-top: 2px"
+                    >
+                      Jarak:
+                      <b
+                        style="color: #6366f1"
+                        x-text="Math.round(odp.distance) + ' meter'"
+                      ></b>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 8px">
+                  <button
+                    @click="downloadKMZ(odp)"
+                    style="
+                      background: #ffffff;
+                      color: #6366f1;
+                      border: 1.5px solid #6366f1;
+                      padding: 6px 10px;
+                      border-radius: 8px;
+                      cursor: pointer;
+                      font-size: 0.8rem;
+                      font-weight: 700;
+                      display: flex;
+                      align-items: center;
+                      gap: 4px;
+                    "
+                  >
+                    <span>💾</span> RUTE
+                  </button>
+                  <button
+                    @click="viewRoute(odp.latlong)"
+                    style="
+                      background: #10b981;
+                      color: white;
+                      border: none;
+                      padding: 6px 12px;
+                      border-radius: 8px;
+                      cursor: pointer;
+                      font-weight: 700;
+                      font-size: 0.8rem;
+                      display: flex;
+                      align-items: center;
+                      gap: 4px;
+                    "
+                  >
+                    <span>🛣️</span> MAPS
+                  </button>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
     </div>
