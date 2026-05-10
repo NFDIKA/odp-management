@@ -2,25 +2,17 @@
   {
     "id": 1,
     "username": "admin",
-    "password": "$2b$10$aJ5U2MWUFPMHbx8fRGtqkO/wI5T0yU7dUKbcc2Lz6mgFSDGGeJS1u",
+    "password": "$2b$10$Z8E2nupgxMcv2/uxE8jF8eoOT.psCcpCSy4BW69s9F1QGgl/m7wkG",
     "nama": "Super Admin",
-    "privilage": "full",
-    "organisasi": "internal"
+    "role": "full",
+    "organisasi": "Admin"
   },
   {
-    "id": 1778296571641,
-    "username": "aoe",
-    "password": "$2b$10$OkQPy0IBTBTheHlo.JcQHeEwlE8JwBmxhfGXWZqabNZESEsbK8bt2",
-    "nama": "ADIKA",
-    "privilage": "read",
-    "organisasi": "Internal"
-  },
-  {
-    "id": 1778296616516,
-    "username": "abc",
-    "password": "$2b$10$Q8WlML6NJeJjnqZKs6Dlju5WCoEsZRZ1qI.QU8FIOwNcMQ.Hc7NVa",
-    "nama": "TES",
-    "privilage": "full",
-    "organisasi": "Internal"
+    "id": 1778387263534,
+    "username": "AAA",
+    "password": "$2b$10$bhQhZV2CL1IAppuBVE4EmO3wgm0tJAhsmMR.MJckQK/hEKsRqkL2m",
+    "nama": "CCC",
+    "organisasi": "admin",
+    "role": "full"
   }
 ]

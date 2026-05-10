@@ -25,154 +25,225 @@ function odpApp() {
   return {
     // --- STATE DATA USER & ADMIN ---
     userModal: false,
+    isEditUser: false, // Menandai apakah sedang mode EDIT atau TAMBAH
 
-    // Ambil username dan role dari localStorage
+    // Ambil data user aktif
     currentUsername: localStorage.getItem("username") || "",
+    currentNama:
+      JSON.parse(localStorage.getItem("user") || "{}").nama || "Guest",
     userRole: JSON.parse(localStorage.getItem("user") || "{}").role || "read",
 
     users: [],
     userForm: {
+      id: null, // Penting untuk proses update
       username: "",
       password: "",
       nama: "",
-      privilage: "read",
+      role: "read",
       organisasi: "",
     },
 
-    // Fungsi mengambil data user dari server
-    async fetchUsers() {
-      // Proteksi: Hanya admin yang boleh fetch data user
-      if (this.currentUsername !== "admin") return;
+    // 1. Fungsi Membuka Modal Tambah (Reset Form)
+    openUserModal() {
+      this.isEditUser = false;
 
-      try {
-        const res = await fetch("/api/admin/users", {
-          headers: { Authorization: localStorage.getItem("token") },
-        });
-        if (res.ok) {
-          this.users = await res.json();
-        }
-      } catch (err) {
-        console.error("Gagal load users:", err);
-      }
+      this.userForm = {
+        id: null,
+        username: "",
+        password: "",
+        nama: "",
+        role: "read",
+        organisasi: "",
+      };
+
+      this.userModal = true;
     },
 
-    idleTimeout: null,
-    // Set waktu idle dalam milidetik (contoh: 15 menit = 15 * 60 * 1000)
-    IDLE_LIMIT: 15 * 60 * 1000,
+    // 2. Fungsi Membuka Modal Edit (Isi Form dengan data lama)
+    editUser(user) {
+      console.log("EDIT USER:", user);
 
-    init() {
-      // Panggil fungsi ini saat aplikasi dimuat
-      this.resetIdleTimer();
-      this.setupIdleListeners();
+      this.isEditUser = true;
+
+      // Clone data agar tabel tidak langsung berubah
+      this.userForm = {
+        ...user,
+
+        // Pastikan ID ada
+        id: user.id || null,
+
+        // Password dikosongkan demi keamanan
+        password: "",
+      };
+
+      this.userModal = true;
     },
 
-    setupIdleListeners() {
-      // Daftar aktivitas yang dianggap "aktif"
-      const events = [
-        "mousedown",
-        "mousemove",
-        "keypress",
-        "scroll",
-        "touchstart",
-      ];
-
-      events.forEach((name) => {
-        document.addEventListener(name, () => this.resetIdleTimer(), true);
-      });
-    },
-
-    resetIdleTimer() {
-      // Hapus timer yang lama jika ada
-      if (this.idleTimeout) clearTimeout(this.idleTimeout);
-
-      // Buat timer baru
-      this.idleTimeout = setTimeout(() => {
-        this.logoutUser("Sesi berakhir karena tidak ada aktivitas.");
-      }, this.IDLE_LIMIT);
-    },
-
-    async logoutUser(message = "Berhasil logout") {
-      // Hapus semua data di localStorage
-      localStorage.clear();
-
-      await CustomSwal.fire({
-        icon: "info",
-        title: "Sesi Berakhir",
-        text: message,
-        timer: 3000,
-        showConfirmButton: false,
-      });
-
-      window.location.href = "login.html";
-    },
-
-    // Fungsi tambah user
+    // 3. Fungsi Simpan (Handle POST dan PUT)
     async addUser() {
-      if (!this.userForm.username || !this.userForm.password) {
+      // VALIDASI
+      if (
+        !this.userForm.username ||
+        (!this.isEditUser && !this.userForm.password)
+      ) {
         return CustomSwal.fire(
           "Error",
-          "Username dan Password wajib diisi",
+          "Data wajib diisi dengan lengkap",
           "error",
         );
       }
 
+      // Tentukan endpoint & method
+      const url = this.isEditUser
+        ? `/api/admin/users/${this.userForm.id}`
+        : "/api/admin/add-user";
+
+      const method = this.isEditUser ? "PUT" : "POST";
+
+      // Clone payload
+      const payload = {
+        ...this.userForm,
+      };
+
+      // Jika edit & password kosong
+      if (
+        this.isEditUser &&
+        (!payload.password || payload.password.trim() === "")
+      ) {
+        delete payload.password;
+      }
+
+      console.log("SAVE USER");
+      console.log("URL:", url);
+      console.log("METHOD:", method);
+      console.log("PAYLOAD:", payload);
+
       try {
-        const res = await fetch("/api/admin/add-user", {
-          method: "POST",
+        const res = await fetch(url, {
+          method: method,
+
           headers: {
             "Content-Type": "application/json",
             Authorization: localStorage.getItem("token"),
           },
-          body: JSON.stringify(this.userForm),
+
+          body: JSON.stringify(payload),
         });
 
+        // SUCCESS
         if (res.ok) {
-          CustomSwal.fire("Berhasil", "User berhasil ditambahkan", "success");
-          this.fetchUsers(); // Refresh list
-          this.userForm = {
-            username: "",
-            password: "",
-            nama: "",
-            privilage: "read",
-            organisasi: "",
-          };
+          CustomSwal.fire(
+            "Berhasil",
+            this.isEditUser ? "Data user diperbarui" : "User baru ditambahkan",
+            "success",
+          );
+
+          // Refresh list user
+          await this.fetchUsers();
+
+          // Tutup modal
+          this.userModal = false;
         } else {
-          const err = await res.json();
-          CustomSwal.fire("Gagal", err.message, "error");
+          let errMessage = "Terjadi kesalahan";
+
+          try {
+            const err = await res.json();
+
+            errMessage = err.message || errMessage;
+          } catch {
+            errMessage = await res.text();
+          }
+
+          console.error("SAVE USER ERROR:", errMessage);
+
+          CustomSwal.fire("Gagal", errMessage, "error");
         }
       } catch (err) {
-        console.error(err);
+        console.error("Save User Error:", err);
+
+        CustomSwal.fire("Error", "Gagal menghubungi server", "error");
       }
     },
 
-    // Fungsi hapus user
+    // 4. Fungsi Hapus User
     async deleteUser(id, username) {
+      if (!id) {
+        return CustomSwal.fire("Error", "ID user tidak valid", "error");
+      }
+
       const confirm = await CustomSwal.fire({
         title: "Hapus User?",
         text: `Yakin ingin menghapus akses ${username}?`,
+
         icon: "warning",
+
         showCancelButton: true,
+
         confirmButtonText: "Ya, Hapus!",
         cancelButtonText: "Batal",
       });
 
       if (confirm.isConfirmed) {
         try {
+          console.log("DELETE USER:", id);
+
           const res = await fetch(`/api/admin/users/${id}`, {
             method: "DELETE",
-            headers: { Authorization: localStorage.getItem("token") },
+
+            headers: {
+              Authorization: localStorage.getItem("token"),
+            },
           });
+
           if (res.ok) {
-            this.fetchUsers();
-            CustomSwal.fire(
-              "Terhapus",
-              "User telah dihapus dari sistem",
-              "success",
-            );
+            await this.fetchUsers();
+
+            CustomSwal.fire("Terhapus", "User telah dihapus", "success");
+          } else {
+            let errMessage = "Gagal menghapus user";
+
+            try {
+              const err = await res.json();
+
+              errMessage = err.message || errMessage;
+            } catch {}
+
+            CustomSwal.fire("Gagal", errMessage, "error");
           }
         } catch (err) {
-          console.error(err);
+          console.error("Delete Error:", err);
+
+          CustomSwal.fire("Error", "Gagal menghubungi server", "error");
         }
+      }
+    },
+
+    // 5. Fetch List Users
+    async fetchUsers() {
+      console.log("CURRENT USER:", this.currentUsername);
+
+      // HAPUS VALIDASI TERLALU STRICT
+      // if (this.currentUsername !== "admin") return;
+
+      try {
+        const res = await fetch("/api/admin/users", {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+          },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+
+          console.log("USERS:", data);
+
+          // Pastikan array
+          this.users = Array.isArray(data) ? data : [];
+        } else {
+          console.error("FETCH USERS GAGAL:", res.status);
+        }
+      } catch (err) {
+        console.error("Gagal load users:", err);
       }
     },
 
@@ -195,7 +266,7 @@ function odpApp() {
     currentUser: JSON.parse(localStorage.getItem("user") || "{}"),
 
     get userRole() {
-      return this.currentUser.role || this.currentUser.privilage || "";
+      return this.currentUser.role || "";
     },
 
     doLogout() {
@@ -295,7 +366,10 @@ function odpApp() {
           try {
             const res = await fetch(`/api/odp/${targetOdp.id}`, {
               method: "PUT",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
               body: JSON.stringify(updatedData),
             });
 
@@ -574,13 +648,11 @@ function odpApp() {
       return null;
     },
 
-    // --- ACTION HANDLERS ---
+    // --- FUNGSI UTAMA (CRUD & Interaksi) ---
     async fetchData() {
       try {
-        // Ambil token dari localStorage
         const token = localStorage.getItem("token");
 
-        // Jika tidak ada token, arahkan kembali ke login
         if (!token) {
           window.location.href = "login.html";
           return;
@@ -590,27 +662,25 @@ function odpApp() {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: token, // Kirim token untuk verifikasi
+            // PERBAIKAN: Tambahkan 'Bearer ' sebelum token
+            Authorization: `Bearer ${token}`,
           },
         });
 
-        // Jika server merespon Unauthorized atau Forbidden
         if (res.status === 401 || res.status === 403) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
+          localStorage.clear();
           window.location.href = "login.html";
           return;
         }
 
         if (!res.ok) throw new Error("Gagal mengambil data dari server");
 
-        this.odps = await res.json();
+        const data = await res.json();
+        this.odps = Array.isArray(data) ? data : [];
 
         console.log("TOTAL DATA:", this.odps.length);
-        console.log("DATA:", this.odps);
       } catch (error) {
-        console.error("Gagal mengambil data:", error);
-        // Tampilkan notifikasi error ke user jika perlu
+        console.error("Fetch Error:", error);
         if (typeof CustomSwal !== "undefined") {
           CustomSwal.fire("Error", "Gagal memuat data ODP", "error");
         }
@@ -714,9 +784,9 @@ function odpApp() {
       const getNojarOnly = (text) =>
         text ? text.toString().replace(/\D/g, "") : "";
 
+      // 1. Validasi Duplikasi (Logika Eksisting)
       for (const odp of this.odps) {
         if (this.isEdit && odp.id === this.form.id) continue;
-
         if (
           odp.nama.trim().toLowerCase() === this.form.nama.trim().toLowerCase()
         ) {
@@ -726,7 +796,6 @@ function odpApp() {
           };
           break;
         }
-
         for (const field of portFields) {
           const inputNojar = getNojarOnly(this.form[field]);
           if (!inputNojar) continue;
@@ -749,13 +818,48 @@ function odpApp() {
         });
       }
 
+      // --- TAMBAHAN FITUR AUDIT (Clean Code) ---
+      const userAktif = this.currentNama; // Diambil dari state yang kita buat di Tahap 1
+
+      // 1. Buat format waktu Indonesia (Contoh: Kamis, 26-April-2026 14:30)
+      const now = new Date();
+      const options = {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      };
+      const formattedDate = now
+        .toLocaleDateString("id-ID", options)
+        .replace(" pukul", "");
+
+      if (this.isEdit) {
+        // Jika edit: update user pengubah dan waktu ubah
+        this.form.last_updated_by = userAktif;
+        this.form.updated_at = formattedDate;
+      } else {
+        // Jika data baru: isi data pembuat dan waktu buat
+        this.form.created_by = userAktif;
+        this.form.created_at = formattedDate;
+
+        // Inisialisasi data update agar tidak kosong saat pertama kali dibuat
+        this.form.last_updated_by = userAktif;
+        this.form.updated_at = formattedDate;
+      }
+      // -----------------------------------------
+
       const method = this.isEdit ? "PUT" : "POST";
       const url = this.isEdit ? `/api/odp/${this.form.id}` : "/api/odp";
 
       try {
         const res = await fetch(url, {
           method,
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
           body: JSON.stringify(this.form),
         });
 
@@ -784,7 +888,12 @@ function odpApp() {
       });
 
       if (result.isConfirmed) {
-        await fetch(`/api/odp/${id}`, { method: "DELETE" });
+        await fetch(`/api/odp/${id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
         await this.fetchData();
         CustomSwal.fire("Terhapus!", "Data telah dihapus.", "success");
       }
@@ -862,7 +971,10 @@ function odpApp() {
           ) {
             const res = await fetch("/api/odp/import-bulk", {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
               body: JSON.stringify(sanitizedData),
             });
 

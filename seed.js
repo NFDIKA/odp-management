@@ -1,4 +1,5 @@
 const bcrypt = require("bcryptjs");
+const { removeListener } = require("cluster");
 const fs = require("fs");
 const path = require("path");
 
@@ -9,8 +10,8 @@ const adminUser = [
     username: "admin",
     password: hashedPassword,
     nama: "Super Admin",
-    privilage: "full",
-    organisasi: "internal",
+    role: "full",
+    organisasi: "Admin",
   },
 ];
 

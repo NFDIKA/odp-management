@@ -55,7 +55,10 @@ const writeLog = (action, user, detail) => {
 // Middleware: Autentikasi (Penyatuan authenticate & verifyToken)
 const authenticate = (req, res, next) => {
   // Cek token di Header atau Cookie
-  const token = req.headers["authorization"] || req.cookies.token;
+  const authHeader = req.headers["authorization"];
+  const token = authHeader?.startsWith("Bearer ")
+    ? authHeader.split(" ")[1]
+    : authHeader || req.cookies.token;
 
   if (!token)
     return res.status(401).json({ message: "Akses ditolak. Silakan login." });
@@ -68,6 +71,116 @@ const authenticate = (req, res, next) => {
     res.status(400).json({ message: "Token tidak valid atau sudah expired." });
   }
 };
+
+// UPDATE USER
+app.put("/api/admin/users/:id", authenticate, async (req, res) => {
+  // Hanya super admin
+  if (req.user.role !== "full" || req.user.username !== "admin") {
+    return res.status(403).json({
+      message: "Hanya Super Admin yang diizinkan",
+    });
+  }
+
+  try {
+    const id = req.params.id;
+
+    const users = JSON.parse(fs.readFileSync(USER_DB, "utf-8"));
+
+    const index = users.findIndex((u) => String(u.id) === String(id));
+
+    if (index === -1) {
+      return res.status(404).json({
+        message: "User tidak ditemukan",
+      });
+    }
+
+    // Data lama
+    const existingUser = users[index];
+
+    // Update data
+    users[index] = {
+      ...existingUser,
+      username: req.body.username || existingUser.username,
+      nama: req.body.nama || existingUser.nama,
+      role: req.body.role || existingUser.role,
+      organisasi: req.body.organisasi || existingUser.organisasi,
+    };
+
+    // Jika password diisi → hash ulang
+    if (req.body.password) {
+      users[index].password = await bcrypt.hash(req.body.password, 10);
+    }
+
+    fs.writeFileSync(USER_DB, JSON.stringify(users, null, 2));
+
+    writeLog(
+      "UPDATE_USER",
+      req.user.nama,
+      `Update user ${users[index].username}`,
+    );
+
+    res.json({
+      message: "User berhasil diperbarui",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Gagal update user",
+    });
+  }
+});
+
+// DELETE USER
+app.delete("/api/admin/users/:id", authenticate, (req, res) => {
+  // Hanya super admin
+  if (req.user.role !== "full" || req.user.username !== "admin") {
+    return res.status(403).json({
+      message: "Hanya Super Admin yang diizinkan",
+    });
+  }
+
+  try {
+    const id = req.params.id;
+
+    let users = JSON.parse(fs.readFileSync(USER_DB, "utf-8"));
+
+    const targetUser = users.find((u) => String(u.id) === String(id));
+
+    if (!targetUser) {
+      return res.status(404).json({
+        message: "User tidak ditemukan",
+      });
+    }
+
+    // Cegah admin hapus dirinya sendiri
+    if (targetUser.username === "admin") {
+      return res.status(400).json({
+        message: "Admin utama tidak boleh dihapus",
+      });
+    }
+
+    users = users.filter((u) => String(u.id) !== String(id));
+
+    fs.writeFileSync(USER_DB, JSON.stringify(users, null, 2));
+
+    writeLog(
+      "DELETE_USER",
+      req.user.nama,
+      `Menghapus user ${targetUser.username}`,
+    );
+
+    res.json({
+      message: "User berhasil dihapus",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Gagal menghapus user",
+    });
+  }
+});
 
 /**
  * AUTHENTICATION API
@@ -85,7 +198,7 @@ app.post("/api/login", async (req, res) => {
         {
           id: user.id,
           username: user.username,
-          role: user.privilage,
+          role: user.role,
           nama: user.nama,
         },
         SECRET_KEY,
@@ -93,7 +206,7 @@ app.post("/api/login", async (req, res) => {
       );
 
       res.cookie("token", token, { httpOnly: true });
-      res.json({ token, user: { nama: user.nama, role: user.privilage } });
+      res.json({ token, user: { nama: user.nama, role: user.role } });
     } else {
       res.status(401).json({ message: "Username atau Password salah" });
     }
@@ -108,7 +221,7 @@ app.post("/api/admin/add-user", authenticate, async (req, res) => {
     return res.status(403).json({ message: "Bukan Admin" });
 
   try {
-    const { username, password, nama, privilage, organisasi } = req.body;
+    const { username, password, nama, role, organisasi } = req.body;
     const users = JSON.parse(fs.readFileSync(USER_DB, "utf-8"));
 
     if (users.find((u) => u.username === username))
@@ -120,7 +233,7 @@ app.post("/api/admin/add-user", authenticate, async (req, res) => {
       username,
       password: hashedPassword,
       nama,
-      privilage,
+      role,
       organisasi,
     };
 
@@ -191,10 +304,12 @@ const checkGlobalDuplicate = (newData, existingData, excludeId = null) => {
 };
 
 // 1. Baca Semua Data ODP
+// Tambahkan di server.js (di bawah middleware authenticate)
 app.get("/api/odp", authenticate, (req, res) => {
   try {
+    if (!fs.existsSync(DB_PATH)) return res.json([]);
     const data = fs.readFileSync(DB_PATH, "utf-8");
-    res.status(200).json(JSON.parse(data));
+    res.json(JSON.parse(data || "[]"));
   } catch (error) {
     res.status(500).json({ message: "Gagal membaca database" });
   }
@@ -215,8 +330,8 @@ app.post("/api/odp", authenticate, (req, res) => {
     const newOdp = {
       id: Date.now(),
       ...req.body,
-      createdBy: req.user.nama,
-      createdAt: new Date().toISOString(),
+      created_by: req.user.nama,
+      created_at: new Date().toISOString(),
     };
 
     data.push(newOdp);
@@ -240,8 +355,8 @@ app.put("/api/odp/:id", authenticate, (req, res) => {
       data[index] = {
         ...data[index],
         ...req.body,
-        updatedBy: req.user.nama,
-        updatedAt: new Date().toISOString(),
+        updated_by: req.user.nama,
+        updated_at: new Date().toISOString(),
       };
       fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
       writeLog(
@@ -321,8 +436,8 @@ app.post("/api/odp/import-bulk", authenticate, (req, res) => {
     const formattedData = newData.map((item) => ({
       id: item.id || Date.now() + Math.random(),
       ...item,
-      createdBy: req.user.nama,
-      createdAt: item.createdAt || new Date().toISOString(),
+      created_by: req.user.nama,
+      created_at: item.createdAt || new Date().toISOString(),
     }));
 
     const finalData = [...dbData, ...formattedData];

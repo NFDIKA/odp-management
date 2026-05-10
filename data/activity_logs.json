@@ -70,5 +70,167 @@
     "action": "CREATE_ODP",
     "user": "TES",
     "detail": "Menambah ODP 111"
+  },
+  {
+    "timestamp": "2026-05-09T05:38:48.743Z",
+    "action": "DELETE_ODP",
+    "user": "TES",
+    "detail": "Menghapus ODP 111"
+  },
+  {
+    "timestamp": "2026-05-09T06:21:48.015Z",
+    "action": "CREATE_ODP",
+    "user": "Super Admin",
+    "detail": "Menambah ODP ODP A"
+  },
+  {
+    "timestamp": "2026-05-09T06:22:15.208Z",
+    "action": "CREATE_ODP",
+    "user": "Super Admin",
+    "detail": "Menambah ODP ODP X"
+  },
+  {
+    "timestamp": "2026-05-09T06:23:36.359Z",
+    "action": "UPDATE_ODP",
+    "user": "Super Admin",
+    "detail": "Update data ODP ODP X"
+  },
+  {
+    "timestamp": "2026-05-09T06:27:07.557Z",
+    "action": "UPDATE_ODP",
+    "user": "Super Admin",
+    "detail": "Update data ODP ODP X"
+  },
+  {
+    "timestamp": "2026-05-09T06:27:14.937Z",
+    "action": "DELETE_ODP",
+    "user": "Super Admin",
+    "detail": "Menghapus ODP ODP X"
+  },
+  {
+    "timestamp": "2026-05-09T06:27:21.251Z",
+    "action": "DELETE_ODP",
+    "user": "Super Admin",
+    "detail": "Menghapus ODP ODP A"
+  },
+  {
+    "timestamp": "2026-05-10T02:35:41.189Z",
+    "action": "CREATE_ODP",
+    "user": "Super Admin",
+    "detail": "Menambah ODP ODP - A"
+  },
+  {
+    "timestamp": "2026-05-10T02:45:19.668Z",
+    "action": "UPDATE_ODP",
+    "user": "Super Admin",
+    "detail": "Update data ODP ODP - A"
+  },
+  {
+    "timestamp": "2026-05-10T02:48:29.962Z",
+    "action": "UPDATE_ODP",
+    "user": "Super Admin",
+    "detail": "Update data ODP ODP - A"
+  },
+  {
+    "timestamp": "2026-05-10T02:50:49.496Z",
+    "action": "DELETE_ODP",
+    "user": "Super Admin",
+    "detail": "Menghapus ODP ODP - A"
+  },
+  {
+    "timestamp": "2026-05-10T02:50:55.321Z",
+    "action": "CREATE_ODP",
+    "user": "Super Admin",
+    "detail": "Menambah ODP TES"
+  },
+  {
+    "timestamp": "2026-05-10T02:53:02.928Z",
+    "action": "DELETE_ODP",
+    "user": "Super Admin",
+    "detail": "Menghapus ODP TES"
+  },
+  {
+    "timestamp": "2026-05-10T02:53:10.135Z",
+    "action": "CREATE_ODP",
+    "user": "Super Admin",
+    "detail": "Menambah ODP TES"
+  },
+  {
+    "timestamp": "2026-05-10T02:57:01.636Z",
+    "action": "UPDATE_ODP",
+    "user": "Super Admin",
+    "detail": "Update data ODP TES"
+  },
+  {
+    "timestamp": "2026-05-10T03:20:20.652Z",
+    "action": "ADD_USER",
+    "user": "Super Admin",
+    "detail": "Menambah user baru: tes"
+  },
+  {
+    "timestamp": "2026-05-10T03:24:50.573Z",
+    "action": "UPDATE_ODP",
+    "user": "Super Admin",
+    "detail": "Update data ODP TES"
+  },
+  {
+    "timestamp": "2026-05-10T04:07:25.637Z",
+    "action": "ADD_USER",
+    "user": "Super Admin",
+    "detail": "Menambah user baru: TES"
+  },
+  {
+    "timestamp": "2026-05-10T04:07:58.364Z",
+    "action": "CREATE_ODP",
+    "user": "Super Admin",
+    "detail": "Menambah ODP TES"
+  },
+  {
+    "timestamp": "2026-05-10T04:08:12.517Z",
+    "action": "UPDATE_ODP",
+    "user": "Super Admin",
+    "detail": "Update data ODP TES"
+  },
+  {
+    "timestamp": "2026-05-10T04:08:19.323Z",
+    "action": "DELETE_ODP",
+    "user": "Super Admin",
+    "detail": "Menghapus ODP TES"
+  },
+  {
+    "timestamp": "2026-05-10T04:25:24.433Z",
+    "action": "IMPORT_EXCEL",
+    "user": "Super Admin",
+    "detail": "Import bulk 32 data"
+  },
+  {
+    "timestamp": "2026-05-10T04:25:56.927Z",
+    "action": "UPDATE_ODP",
+    "user": "Super Admin",
+    "detail": "Update data ODP ODP 4"
+  },
+  {
+    "timestamp": "2026-05-10T04:26:06.706Z",
+    "action": "UPDATE_ODP",
+    "user": "Super Admin",
+    "detail": "Update data ODP ODP 4"
+  },
+  {
+    "timestamp": "2026-05-10T04:27:43.540Z",
+    "action": "ADD_USER",
+    "user": "Super Admin",
+    "detail": "Menambah user baru: AAA"
+  },
+  {
+    "timestamp": "2026-05-10T04:37:24.518Z",
+    "action": "DELETE_USER",
+    "user": "Super Admin",
+    "detail": "Menghapus user TES"
+  },
+  {
+    "timestamp": "2026-05-10T04:37:43.096Z",
+    "action": "UPDATE_USER",
+    "user": "Super Admin",
+    "detail": "Update user AAA"
   }
 ]

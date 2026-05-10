@@ -27,26 +27,37 @@
     <nav
       class="glass-nav"
       style="
+        width: 100%;
+        padding: 0.9rem 1.5rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0.75rem 1.5rem;
-        width: 100%;
+        gap: 1rem;
         box-sizing: border-box;
+        flex-wrap: wrap;
       "
     >
-      <div style="display: flex; align-items: center; gap: 1rem">
+      <!-- LEFT -->
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 0.9rem;
+          min-width: 220px;
+        "
+      >
         <div
           style="
-            background: var(--primary);
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+            flex-shrink: 0;
           "
         >
           <svg
@@ -56,128 +67,178 @@
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            <path
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M13 10V3L4 14h7v7l9-11h-7z"
+            ></path>
           </svg>
         </div>
-        <h1
-          style="
-            font-size: 1.4rem;
-            margin: 0;
-            font-weight: 900;
-            letter-spacing: -0.5px;
-          "
-        >
-          FiberFlow
-        </h1>
+
+        <div>
+          <h1
+            style="
+              margin: 0;
+              font-size: 1.35rem;
+              font-weight: 900;
+              letter-spacing: -0.5px;
+              color: #000000;
+              line-height: 1.1;
+            "
+          >
+            FiberFlow
+          </h1>
+
+          <div
+            style="
+              font-size: 0.72rem;
+              color: rgb(0, 0, 0);
+              margin-top: 2px;
+              letter-spacing: 0.4px;
+            "
+          >
+            ODP Management System
+          </div>
+        </div>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 0.75rem">
+      <!-- RIGHT -->
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          flex: 1;
+        "
+      >
+        <!-- ACTION BUTTONS -->
         <div
           style="
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            padding-right: 0.75rem;
-            margin-right: 0.25rem;
+            gap: 0.6rem;
+            flex-wrap: wrap;
           "
         >
           <button
             @click="coverageModal = true"
             class="btn"
             style="
-              background: #6366f1;
+              background: linear-gradient(135deg, #6366f1, #4f46e5);
               color: white;
-              font-weight: 700;
-              border-radius: 10px;
-              padding: 0.6rem 1rem;
-              font-size: 0.85rem;
               border: none;
+              border-radius: 12px;
+              padding: 0.7rem 1rem;
+              font-size: 0.82rem;
+              font-weight: 700;
               cursor: pointer;
             "
           >
-            🔍 CEK COVERAGE
+            🔍 Coverage
           </button>
+
           <template x-if="currentUsername === 'admin' && userRole === 'full'">
             <button
-              @click="userModal = true; fetchUsers()"
+              @click="openUserModal(); fetchUsers()"
               class="btn"
               style="
-                background: #417ed5;
-                color: white;
+                background: rgba(59, 130, 246, 0.15);
+                color: #93c5fd;
+                border: 1px solid rgba(59, 130, 246, 0.25);
+                border-radius: 12px;
+                padding: 0.7rem 1rem;
+                font-size: 0.82rem;
                 font-weight: 700;
-                padding: 0.6rem 1rem;
-                border-radius: 10px;
-                font-size: 0.85rem;
-                border: none;
                 cursor: pointer;
               "
             >
-              👥 USERS
+              👥 Users
             </button>
           </template>
+
           <template x-if="userRole === 'full'">
-            <div style="display: flex; gap: 0.5rem">
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap">
               <button
                 @click="cabutModal = true"
                 class="btn btn-cabut"
                 style="
+                  border-radius: 12px;
+                  padding: 0.7rem 1rem;
+                  font-size: 0.82rem;
                   font-weight: 700;
-                  padding: 0.6rem 1rem;
-                  border-radius: 10px;
-                  font-size: 0.85rem;
                 "
               >
-                🛑 FORM CABUT
+                🛑 Cabut
               </button>
+
               <button
                 @click="openModal()"
                 class="btn btn-primary"
                 style="
+                  border-radius: 12px;
+                  padding: 0.7rem 1rem;
+                  font-size: 0.82rem;
                   font-weight: 700;
-                  padding: 0.6rem 1rem;
-                  border-radius: 10px;
-                  font-size: 0.85rem;
                 "
               >
-                ➕ NEW ODP
+                ➕ New ODP
               </button>
             </div>
           </template>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 1rem">
-          <div style="text-align: right; line-height: 1.2">
-            <div
-              style="font-weight: 800; font-size: 0.9rem; color: #f8fafc"
-              x-text="currentUser.nama"
-            ></div>
+        <!-- USER SECTION -->
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding-left: 1rem;
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+          "
+        >
+          <div style="text-align: right">
             <div
               style="
-                font-size: 0.65rem;
-                color: #94a3b8;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
+                font-size: 0.88rem;
+                font-weight: 700;
+                color: #000000;
+                line-height: 1.2;
               "
-              x-text="currentUser.role"
+              x-text="currentNama"
+            ></div>
+
+            <div
+              style="
+                font-size: 0.68rem;
+                color: rgb(0, 0, 0);
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-top: 2px;
+              "
+              x-text="userRole"
             ></div>
           </div>
 
           <button
-            @click="logoutUser('Anda telah logout.')"
+            @click="doLogout()"
             class="btn"
             style="
-              background: rgba(239, 68, 68, 0.1);
-              color: #ef4444;
+              background: rgba(239, 68, 68, 0.12);
+              color: #f87171;
               border: 1px solid rgba(239, 68, 68, 0.2);
+              border-radius: 10px;
+              padding: 0.65rem 0.9rem;
+              font-size: 0.78rem;
               font-weight: 700;
-              padding: 0.5rem 0.8rem;
-              border-radius: 8px;
-              font-size: 0.8rem;
-              transition: all 0.2s;
+              cursor: pointer;
+              transition: all 0.2s ease;
             "
           >
-            Log Out
+            Logout
           </button>
         </div>
       </div>
@@ -462,108 +523,114 @@
       </div>
 
       <div class="odp-card">
-        <table class="odp-table">
-          <thead>
-            <tr>
-              <th>Identity</th>
-              <th>Area / Cluster</th>
-              <th style="text-align: center">In Status</th>
-              <th style="text-align: center">Out Status</th>
-              <th style="text-align: right">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template x-for="item in paginatedOdps" :key="item.id">
-              <tr
-                :class="getStatusClass(item)"
-                style="border-bottom: 1px solid #f1f5f9"
-              >
-                <td>
-                  <div
-                    style="font-weight: 800; font-size: 1rem"
-                    x-text="item.nama"
-                  ></div>
+        <div class="table-container">
+          <table class="odp-table">
+            <thead>
+              <tr>
+                <th>Identity</th>
+                <th>Area / Cluster</th>
+                <th style="text-align: center">In Status</th>
+                <th style="text-align: center">Out Status</th>
+                <th style="text-align: center">Last Updated</th>
+                <th style="text-align: center">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="item in paginatedOdps" :key="item.id">
+                <tr
+                  :class="getStatusClass(item)"
+                  style="border-bottom: 1px solid #f1f5f9"
+                >
+                  <td>
+                    <div
+                      style="font-weight: 800; font-size: 1rem"
+                      x-text="item.nama"
+                    ></div>
 
-                  <div
-                    style="
-                      display: flex;
-                      align-items: center;
-                      gap: 5px;
-                      margin-top: 4px;
-                    "
-                  >
-                    <span
+                    <div
                       style="
-                        color: var(--primary);
-                        font-size: 0.7rem;
-                        font-weight: 700;
+                        display: flex;
+                        align-items: center;
+                        gap: 5px;
+                        margin-top: 4px;
                       "
-                      x-text="item.level"
-                    ></span>
-                    <span
-                      :class="{
+                    >
+                      <span
+                        style="
+                          color: var(--primary);
+                          font-size: 0.7rem;
+                          font-weight: 700;
+                        "
+                        x-text="item.level"
+                      ></span>
+                      <span
+                        :class="{
             'badge badge-green': getUtilization(item) < 75,
             'badge badge-yellow': getUtilization(item) >= 75 && getUtilization(item) < 100,
             'badge badge-red': getUtilization(item) === 100
           }"
-                      x-text="getUtilization(item) === 100 ? 'FULL' : (getUtilization(item) >= 75 ? 'CRITICAL' : 'AVAILABLE')"
-                    ></span>
-                  </div>
-                  <template x-if="isNojarMatch(item)">
+                        x-text="getUtilization(item) === 100 ? 'FULL' : (getUtilization(item) >= 75 ? 'CRITICAL' : 'AVAILABLE')"
+                      ></span>
+                    </div>
+                    <template x-if="isNojarMatch(item)">
+                      <div
+                        style="
+                          margin-top: 5px;
+                          font-size: 10px;
+                          color: #d97706;
+                          font-weight: bold;
+                        "
+                      >
+                        🔍 Nojar ditemukan di Port
+                        <span x-text="isNojarMatch(item)"></span>
+                      </div>
+                    </template>
+                  </td>
+
+                  <td>
+                    <div
+                      style="font-weight: 700; color: #1e293b"
+                      x-text="item.area"
+                    ></div>
                     <div
                       style="
-                        margin-top: 5px;
-                        font-size: 10px;
-                        color: #d97706;
-                        font-weight: bold;
+                        font-size: 0.7rem;
+                        color: #94a3b8;
+                        text-transform: uppercase;
+                        font-weight: 600;
                       "
+                      x-text="item.cluster + ' / ' + (item.kota || '-')"
+                    ></div>
+                  </td>
+
+                  <td style="text-align: center">
+                    <div
+                      style="display: flex; justify-content: center; gap: 2px"
                     >
-                      🔍 Nojar ditemukan di Port
-                      <span x-text="isNojarMatch(item)"></span>
-                    </div>
-                  </template>
-                </td>
-
-                <td>
-                  <div
-                    style="font-weight: 700; color: #1e293b"
-                    x-text="item.area"
-                  ></div>
-                  <div
-                    style="
-                      font-size: 0.7rem;
-                      color: #94a3b8;
-                      text-transform: uppercase;
-                      font-weight: 600;
-                    "
-                    x-text="item.cluster + ' / ' + (item.kota || '-')"
-                  ></div>
-                </td>
-
-                <td style="text-align: center">
-                  <div style="display: flex; justify-content: center; gap: 2px">
-                    <div
-                      class="indicator-dot"
-                      :class="item.in1 ? 'dot-active' : 'dot-empty'"
-                    ></div>
-                    <div
-                      class="indicator-dot"
-                      :class="item.in2 ? 'dot-active' : 'dot-empty'"
-                    ></div>
-                  </div>
-                  <div
-                    style="font-size: 0.6rem; color: #94a3b8; margin-top: 4px"
-                  >
-                    <b>IN</b>
-                  </div>
-                </td>
-
-                <td style="text-align: center">
-                  <div style="display: flex; justify-content: center; gap: 1px">
-                    <template x-for="i in 8">
                       <div
                         class="indicator-dot"
-                        :class="
+                        :class="item.in1 ? 'dot-active' : 'dot-empty'"
+                      ></div>
+                      <div
+                        class="indicator-dot"
+                        :class="item.in2 ? 'dot-active' : 'dot-empty'"
+                      ></div>
+                    </div>
+                    <div
+                      style="font-size: 0.6rem; color: #94a3b8; margin-top: 4px"
+                    >
+                      <b>IN</b>
+                    </div>
+                  </td>
+
+                  <td style="text-align: center">
+                    <div
+                      style="display: flex; justify-content: center; gap: 1px"
+                    >
+                      <template x-for="i in 8">
+                        <div
+                          class="indicator-dot"
+                          :class="
                         !item['out'+i]
                           ? 'dot-empty'
                           : getUtilization(item) >= 80
@@ -572,107 +639,182 @@
                           ? 'dot-warning'
                           : 'dot-active'
                       "
-                      ></div>
-                    </template>
-                  </div>
+                        ></div>
+                      </template>
+                    </div>
 
-                  <div
-                    style="font-size: 0.6rem; color: #94a3b8; margin-top: 4px"
-                  >
-                    <b><span x-text="getUtilization(item)"></span>% Filled</b>
-                  </div>
-                </td>
+                    <div
+                      style="font-size: 0.6rem; color: #94a3b8; margin-top: 4px"
+                    >
+                      <b><span x-text="getUtilization(item)"></span>% Filled</b>
+                    </div>
+                  </td>
 
-                <td style="text-align: right; white-space: nowrap">
-                  <button
-                    @click="openInMaps(item.latlong)"
-                    class="btn-action btn-view"
-                    style="color: #13be21"
+                  <td
+                    style="
+                      padding: 1rem;
+                      vertical-align: middle;
+                      text-align: left;
+                    "
                   >
-                    📍 MAP
-                  </button>
-                  <button @click="viewData(item)" class="btn-action btn-view">
-                    VIEW
-                  </button>
-                  <button @click="editOdp(item)" class="btn-action btn-edit">
-                    EDIT
-                  </button>
-                  <button
-                    @click="deleteOdp(item.id)"
-                    class="btn-action btn-delete"
-                  >
-                    DEL
-                  </button>
-                </td>
-              </tr>
-            </template>
-          </tbody>
-        </table>
+                    <div
+                      style="
+                        font-weight: 800;
+                        font-size: 1rem;
+                        color: #1e293b;
+                        line-height: 1.2;
+                      "
+                      x-text="item.nama"
+                    ></div>
 
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            border-top: 1px solid #e2e8f0;
-            flex-wrap: wrap;
-            gap: 1rem;
-          "
-        >
-          <div style="font-size: 0.85rem; color: #64748b">
-            Menampilkan
-            <b x-text="paginatedOdps.length"></b>
-            dari
-            <b x-text="filteredOdps.length"></b>
-            data
+                    <div
+                      style="
+                        margin-top: 6px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 2px;
+                      "
+                    >
+                      <div
+                        style="
+                          font-size: 10px;
+                          color: #94a3b8;
+                          text-transform: uppercase;
+                          letter-spacing: 0.05em;
+                          display: flex;
+                          align-items: center;
+                          gap: 4px;
+                        "
+                      >
+                        <span
+                          x-text="item.last_updated_by ? 'Update by:' : 'Create by:'"
+                          style="font-weight: bold"
+                        ></span>
+                        <span
+                          style="color: #64748b"
+                          x-text="item.last_updated_by || item.created_by || '-'"
+                        ></span>
+                      </div>
+
+                      <div
+                        style="
+                          font-size: 10px;
+                          color: #94a3b8;
+                          display: flex;
+                          align-items: center;
+                          gap: 4px;
+                        "
+                      >
+                        <svg
+                          style="width: 10px; height: 10px"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <span
+                          x-text="item.updated_at || item.created_at || '-'"
+                        ></span>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td style="text-align: right; white-space: nowrap">
+                    <button
+                      @click="openInMaps(item.latlong)"
+                      class="btn-action btn-view"
+                      style="color: #13be21"
+                    >
+                      📍 MAP
+                    </button>
+                    <button @click="viewData(item)" class="btn-action btn-view">
+                      VIEW
+                    </button>
+                    <button @click="editOdp(item)" class="btn-action btn-edit">
+                      EDIT
+                    </button>
+                    <button
+                      @click="deleteOdp(item.id)"
+                      class="btn-action btn-delete"
+                    >
+                      DEL
+                    </button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1rem;
+          border-top: 1px solid #e2e8f0;
+          flex-wrap: wrap;
+          gap: 1rem;
+        "
+      >
+        <div style="font-size: 0.85rem; color: #64748b">
+          Menampilkan
+          <b x-text="paginatedOdps.length"></b>
+          dari
+          <b x-text="filteredOdps.length"></b>
+          data
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; align-items: center">
+          <button
+            class="btn"
+            @click="if(currentPage > 1) currentPage--"
+            :disabled="currentPage === 1"
+            style="padding: 0.5rem 1rem"
+          >
+            Prev
+          </button>
+
+          <div
+            style="
+              background: #f1f5f9;
+              padding: 0.5rem 1rem;
+              border-radius: 0.5rem;
+              font-weight: 700;
+            "
+          >
+            <span x-text="currentPage"></span> /
+            <span x-text="totalPages || 1"></span>
           </div>
 
-          <div style="display: flex; gap: 0.5rem; align-items: center">
-            <button
-              class="btn"
-              @click="if(currentPage > 1) currentPage--"
-              :disabled="currentPage === 1"
-              style="padding: 0.5rem 1rem"
+          <button
+            class="btn"
+            @click="if(currentPage < totalPages) currentPage++"
+            :disabled="currentPage >= totalPages"
+            style="padding: 0.5rem 1rem"
+          >
+            Next
+          </button>
+
+          <div style="display: flex; align-items: center; gap: 8px">
+            <span style="font-size: 0.8rem">Rows:</span>
+
+            <select
+              x-model="itemsPerPage"
+              @change="currentPage = 1"
+              style="width: 80px"
             >
-              Prev
-            </button>
-
-            <div
-              style="
-                background: #f1f5f9;
-                padding: 0.5rem 1rem;
-                border-radius: 0.5rem;
-                font-weight: 700;
-              "
-            >
-              <span x-text="currentPage"></span> /
-              <span x-text="totalPages || 1"></span>
-            </div>
-
-            <button
-              class="btn"
-              @click="if(currentPage < totalPages) currentPage++"
-              :disabled="currentPage >= totalPages"
-              style="padding: 0.5rem 1rem"
-            >
-              Next
-            </button>
-
-            <div style="display: flex; align-items: center; gap: 8px">
-              <span style="font-size: 0.8rem">Rows:</span>
-
-              <select
-                x-model="itemsPerPage"
-                @change="currentPage = 1"
-                style="width: 80px"
-              >
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-              </select>
-            </div>
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
           </div>
         </div>
       </div>
@@ -853,7 +995,13 @@
       </div>
     </div>
 
-    <div x-show="cabutModal" x-cloak class="modal-overlay">
+    <div
+      x-show="cabutModal"
+      x-cloak
+      class="modal-overlay"
+      @click.self="cabutModal = false"
+      @keydown.escape.window="cabutModal = false"
+    >
       <div class="modal-content" style="max-width: 450px">
         <h2
           style="margin: 0 0 1.5rem 0; font-weight: 900; color: var(--danger)"
@@ -912,9 +1060,7 @@
 
         <!-- CONTENT -->
         <div class="view-body">
-          <!-- BASIC INFO -->
           <div class="view-info">
-            <!-- AREA -->
             <div class="copy-field">
               <div class="copy-value">
                 <b>Area:</b>
@@ -942,7 +1088,6 @@
               </button>
             </div>
 
-            <!-- CLUSTER -->
             <div class="copy-field">
               <div class="copy-value">
                 <b>Cluster:</b>
@@ -970,7 +1115,6 @@
               </button>
             </div>
 
-            <!-- LATLONG -->
             <div class="copy-field">
               <div class="copy-value">
                 <b>Latlong:</b>
@@ -1001,9 +1145,7 @@
 
           <hr class="view-divider" />
 
-          <!-- IN PORT -->
           <div class="view-in">
-            <!-- IN1 -->
             <div class="copy-field">
               <div class="copy-value">
                 <b>In 1:</b>
@@ -1031,7 +1173,6 @@
               </button>
             </div>
 
-            <!-- IN2 -->
             <div class="copy-field">
               <div class="copy-value">
                 <b>In 2:</b>
@@ -1060,7 +1201,6 @@
             </div>
           </div>
 
-          <!-- OUT PORT -->
           <div class="section-title">Out Ports</div>
 
           <div class="out-grid">
@@ -1098,7 +1238,6 @@
             </template>
           </div>
 
-          <!-- STATUS -->
           <div class="section-title mt-space">Status Port Output</div>
 
           <div class="port-grid">
@@ -1112,11 +1251,85 @@
               </div>
             </template>
           </div>
+
+          <div
+            style="
+              margin-top: 1.5rem;
+              padding-top: 1rem;
+              border-top: 1px solid rgba(255, 255, 255, 0.1);
+            "
+          >
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem"
+            >
+              <div>
+                <p
+                  style="
+                    font-size: 10px;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    font-weight: bold;
+                    margin-bottom: 4px;
+                    letter-spacing: 0.05em;
+                  "
+                >
+                  Created By
+                </p>
+                <p
+                  style="
+                    font-size: 0.875rem;
+                    color: #60a5fa;
+                    font-weight: 500;
+                    margin-bottom: 2px;
+                  "
+                  x-text="viewItem.created_by || 'System'"
+                ></p>
+                <p
+                  style="font-size: 10px; color: #94a3b8; font-style: italic"
+                  x-text="viewItem.created_at || '-'"
+                ></p>
+              </div>
+
+              <div style="text-align: right">
+                <p
+                  style="
+                    font-size: 10px;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    font-weight: bold;
+                    margin-bottom: 4px;
+                    letter-spacing: 0.05em;
+                  "
+                >
+                  Last Updated By
+                </p>
+                <p
+                  style="
+                    font-size: 0.875rem;
+                    color: #34d399;
+                    font-weight: 500;
+                    margin-bottom: 2px;
+                  "
+                  x-text="viewItem.last_updated_by || 'System'"
+                ></p>
+                <p
+                  style="font-size: 10px; color: #94a3b8; font-style: italic"
+                  x-text="viewItem.updated_at || '-'"
+                ></p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div x-show="coverageModal" x-cloak class="modal-overlay">
+    <div
+      x-show="coverageModal"
+      x-cloak
+      class="modal-overlay"
+      @click.self="coverageModal = false"
+      @keydown.escape.window="coverageModal = false"
+    >
       <div class="modal-content" style="max-width: 600px">
         <div
           style="
@@ -1298,13 +1511,11 @@
       @keydown.escape.window="userModal = false"
     >
       <div class="user-modal-content">
-        <!-- HEADER -->
         <div class="form-modal-header">
           <div>
             <h2 class="form-title">👥 User Access Management</h2>
             <p class="form-subtitle">Kelola user, role, dan akses sistem</p>
           </div>
-
           <button
             type="button"
             @click="userModal = false"
@@ -1314,12 +1525,12 @@
           </button>
         </div>
 
-        <!-- BODY -->
         <div class="form-body">
-          <!-- FORM -->
           <div class="form-section">
             <div class="section-header">
-              <h3>➕ Tambah Akun Baru</h3>
+              <h3
+                x-text="isEditUser ? '📝 Edit Akun' : '➕ Tambah Akun Baru'"
+              ></h3>
               <span class="section-badge">FORM USER</span>
             </div>
 
@@ -1329,6 +1540,8 @@
                 <input
                   type="text"
                   x-model="userForm.username"
+                  :disabled="isEditUser"
+                  :style="isEditUser ? 'background: #334155; cursor: not-allowed;' : ''"
                   placeholder="Username"
                 />
               </div>
@@ -1338,7 +1551,7 @@
                 <input
                   type="password"
                   x-model="userForm.password"
-                  placeholder="Password"
+                  :placeholder="isEditUser ? 'Kosongkan jika tidak diubah' : 'Password'"
                 />
               </div>
 
@@ -1352,8 +1565,8 @@
               </div>
 
               <div class="form-group">
-                <label>PRIVILEGE</label>
-                <select x-model="userForm.privilage">
+                <label>ROLE</label>
+                <select x-model="userForm.role">
                   <option value="read">READ ONLY</option>
                   <option value="full">FULL ACCESS</option>
                 </select>
@@ -1361,22 +1574,24 @@
 
               <div class="form-group">
                 <label>UNIT</label>
-                <input
-                  type="text"
-                  x-model="userForm.organisasi"
-                  placeholder="Unit / Organisasi"
-                />
+                <select x-model="userForm.organisasi">
+                  <option value="">Pilih Unit</option>
+                  <option value="admin">Admin</option>
+                  <option value="internal">Internal</option>
+                  <option value="eksternal">Eksternal</option>
+                </select>
               </div>
 
               <div class="form-group full-width">
-                <button @click="addUser()" class="btn-submit-modern">
-                  SIMPAN USER
-                </button>
+                <button
+                  @click="addUser()"
+                  class="btn-submit-modern"
+                  x-text="isEditUser ? 'UPDATE USER' : 'SIMPAN USER'"
+                ></button>
               </div>
             </div>
           </div>
 
-          <!-- TABLE -->
           <div class="table-section">
             <div class="section-header">
               <h3>LIST USER</h3>
@@ -1394,24 +1609,43 @@
                     <th style="text-align: center">AKSI</th>
                   </tr>
                 </thead>
-
                 <tbody>
                   <template x-for="user in users" :key="user.id">
                     <tr>
                       <td class="text-bold" x-text="user.username"></td>
                       <td x-text="user.nama"></td>
-
                       <td>
                         <span
                           class="badge"
-                          :class="user.privilage === 'full' ? 'badge-success' : 'badge-info'"
-                          x-text="user.privilage"
+                          :class="user.role === 'full' ? 'badge-success' : 'badge-info'"
+                          x-text="user.role"
                         ></span>
                       </td>
-
                       <td x-text="user.organisasi"></td>
+                      <td
+                        style="
+                          text-align: center;
+                          display: flex;
+                          gap: 8px;
+                          justify-content: center;
+                        "
+                      >
+                        <button
+                          @click="editUser(user)"
+                          class="btn-info-small"
+                          style="
+                            background: #0ea5e9;
+                            color: white;
+                            border: none;
+                            padding: 4px 8px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 10px;
+                          "
+                        >
+                          EDIT
+                        </button>
 
-                      <td style="text-align: center">
                         <button
                           x-show="user.username !== 'admin'"
                           @click="deleteUser(user.id, user.username)"
