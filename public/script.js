@@ -45,8 +45,105 @@ function odpApp() {
       role: "read",
       organisasi: "",
     },
+    // State untuk modal ganti password
+    changePasswordModal: false,
 
-    // 1. Fungsi Membuka Modal Tambah (Reset Form)
+    passwordForm: {
+      oldPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+
+    showOldPassword: false,
+    showNewPassword: false,
+    showConfirmPassword: false,
+    showUserPassword: false, // <-- TAMBAHKAN INI
+
+    // State untuk fitur auto-logout
+    idleTimer: null,
+
+    idleLimit: 15 * 60 * 1000, // 15 menit
+
+    // Fungsi change password
+    async changePassword() {
+      // VALIDASI
+      if (
+        !this.passwordForm.oldPassword ||
+        !this.passwordForm.newPassword ||
+        !this.passwordForm.confirmPassword
+      ) {
+        return CustomSwal.fire(
+          "Error",
+          "Semua field password wajib diisi",
+          "error",
+        );
+      }
+
+      // KONFIRMASI PASSWORD
+      if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
+        return CustomSwal.fire(
+          "Error",
+          "Konfirmasi password tidak cocok",
+          "error",
+        );
+      }
+
+      // MINIMAL PASSWORD
+      if (this.passwordForm.newPassword.length < 6) {
+        return CustomSwal.fire("Error", "Password minimal 6 karakter", "error");
+      }
+
+      try {
+        const res = await fetch("/api/change-password", {
+          method: "PUT",
+
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // Tambahkan Bearer
+          },
+          body: JSON.stringify(this.passwordForm),
+        });
+
+        const result = await res.json();
+
+        console.log(result);
+
+        if (res.ok) {
+          await CustomSwal.fire({
+            icon: "success",
+            title: "Berhasil",
+            text: result.message,
+          });
+
+          // TUTUP MODAL
+          this.changePasswordModal = false;
+
+          // RESET FORM
+          this.passwordForm = {
+            oldPassword: "",
+            newPassword: "",
+            confirmPassword: "",
+          };
+
+          // RESET TOGGLE PASSWORD
+          this.showOldPassword = false;
+          this.showNewPassword = false;
+          this.showConfirmPassword = false;
+        } else {
+          CustomSwal.fire(
+            "Gagal",
+            result.message || "Gagal mengganti password",
+            "error",
+          );
+        }
+      } catch (err) {
+        console.error(err);
+
+        CustomSwal.fire("Error", "Gagal menghubungi server", "error");
+      }
+    },
+
+    // Fungsi Membuka Modal Tambah (Reset Form)
     openUserModal() {
       this.isEditUser = false;
 
@@ -62,7 +159,7 @@ function odpApp() {
       this.userModal = true;
     },
 
-    // 2. Fungsi Membuka Modal Edit (Isi Form dengan data lama)
+    // Fungsi Membuka Modal Edit (Isi Form dengan data lama)
     editUser(user) {
       console.log("EDIT USER:", user);
 
@@ -82,7 +179,7 @@ function odpApp() {
       this.userModal = true;
     },
 
-    // 3. Fungsi Simpan (Handle POST dan PUT)
+    // Fungsi Simpan (Handle POST dan PUT)
     async addUser() {
       // VALIDASI
       if (
@@ -127,7 +224,7 @@ function odpApp() {
 
           headers: {
             "Content-Type": "application/json",
-            Authorization: localStorage.getItem("token"),
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // Tambahkan Bearer
           },
 
           body: JSON.stringify(payload),
@@ -168,7 +265,7 @@ function odpApp() {
       }
     },
 
-    // 4. Fungsi Hapus User
+    //  Fungsi Hapus User
     async deleteUser(id, username) {
       if (!id) {
         return CustomSwal.fire("Error", "ID user tidak valid", "error");
@@ -194,7 +291,7 @@ function odpApp() {
             method: "DELETE",
 
             headers: {
-              Authorization: localStorage.getItem("token"),
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           });
 
@@ -221,7 +318,7 @@ function odpApp() {
       }
     },
 
-    // 5. Fetch List Users
+    //  Fetch List Users
     async fetchUsers() {
       console.log("CURRENT USER:", this.currentUsername);
 
@@ -231,7 +328,7 @@ function odpApp() {
       try {
         const res = await fetch("/api/admin/users", {
           headers: {
-            Authorization: localStorage.getItem("token"),
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
 
@@ -250,7 +347,7 @@ function odpApp() {
       }
     },
 
-    // Tambahkan di dalam return { ... } pada script.js
+    // Fungsi untuk menghitung jarak antara dua titik koordinat menggunakan Haversine Formula
     calculateDistance(lat1, lon1, lat2, lon2) {
       const R = 6371e3; // Radius bumi dalam meter
       const φ1 = (lat1 * Math.PI) / 180;
@@ -272,15 +369,6 @@ function odpApp() {
       return this.currentUser.role || "";
     },
 
-    doLogout() {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "login.html";
-    },
-
-    async changePassword(newPass) {
-      // API Call ke backend untuk update password user yang sedang login
-    },
     // --- STATE DATA ---
     odps: [],
     searchQuery: "",
@@ -337,7 +425,6 @@ function odpApp() {
       this.currentPage = 1;
     },
     // --- FUNGSI CABUT LAYANAN ---
-    // Di dalam return { ... } odpApp
     async findAndConfirmCabut() {
       if (!this.nojarCabut || this.nojarCabut.length < 3) {
         return CustomSwal.fire(
@@ -450,7 +537,7 @@ function odpApp() {
       const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=walking`;
       window.open(url, "_blank");
     },
-
+    // Fungsi untuk menghitung sisa port yang tersedia pada ODP
     getAvailablePorts(odp) {
       let occupied = 0;
       for (let i = 1; i <= 8; i++) {
@@ -469,14 +556,14 @@ function odpApp() {
       }
       return 8 - occupied;
     },
-
+    // Fungsi untuk menentukan warna dot berdasarkan sisa port yang tersedia
     getDotColor(odp) {
       const sisa = this.getAvailablePorts(odp);
       if (sisa === 0) return "#ef4444"; // Merah
       if (sisa <= 2) return "#f59e0b"; // Kuning/Oranye
       return "#10b981"; // Hijau
     },
-
+    // Fungsi Download KMZ (KML) untuk Rute Jalan
     downloadKMZ(odp) {
       if (!this.customerLatLong) {
         CustomSwal.fire("Info", "Tentukan lokasi pelanggan dulu", "info");
@@ -539,13 +626,13 @@ function odpApp() {
       document.body.removeChild(a);
     },
 
-    // Contoh di script.js
+    // Fungsi Simpan ODP (Handle POST dan PUT)
     async saveODP() {
       const res = await fetch("/api/odp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: localStorage.getItem("token"), // Kirim token login
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           ...this.formData,
@@ -756,7 +843,7 @@ function odpApp() {
         }
       }
     },
-
+    // Fungsi untuk memformat input agar konsisten (misal: otomatis uppercase, menambahkan strip pada latlong, dll)
     formatInput(field) {
       let value = this.form[field];
       if (!value) return;
@@ -769,7 +856,7 @@ function odpApp() {
       }
       this.form[field] = value;
     },
-
+    // Fungsi untuk membuka lokasi ODP di Google Maps berdasarkan koordinat latlong
     openInMaps(latlong) {
       if (!latlong || latlong.trim() === "") {
         return CustomSwal.fire(
@@ -803,6 +890,7 @@ function odpApp() {
       }
     },
 
+    // Fungsi Membuka Modal Tambah ODP (Reset Form)
     openModal() {
       this.isEdit = false;
       this.form = {
@@ -825,17 +913,18 @@ function odpApp() {
       this.modalOpen = true;
     },
 
+    // Fungsi Membuka Modal Edit ODP (Isi Form dengan data lama)
     editOdp(item) {
       this.isEdit = true;
       this.form = { ...item };
       this.modalOpen = true;
     },
-
+    // Fungsi Membuka Modal View ODP (Isi data untuk ditampilkan)
     viewData(item) {
       this.viewItem = item;
       this.viewOpen = true;
     },
-
+    // Fungsi Simpan ODP (Handle POST dan PUT)
     async saveData() {
       const portFields = [
         "in1",
@@ -893,16 +982,22 @@ function odpApp() {
 
       // 1. Buat format waktu Indonesia (Contoh: Kamis, 26-April-2026 14:30)
       const now = new Date();
+
       const options = {
+        timeZone: "Asia/Jakarta",
+
         weekday: "long",
         day: "2-digit",
         month: "long",
         year: "numeric",
+
         hour: "2-digit",
         minute: "2-digit",
       };
+
       const formattedDate = now
-        .toLocaleDateString("id-ID", options)
+        .toLocaleString("id-ID", options)
+        .replace(".", ":")
         .replace(" pukul", "");
 
       if (this.isEdit) {
@@ -947,7 +1042,7 @@ function odpApp() {
         CustomSwal.fire("Error", "Koneksi bermasalah.", "error");
       }
     },
-
+    // Fungsi Hapus ODP dengan Konfirmasi
     async deleteOdp(id) {
       const result = await CustomSwal.fire({
         title: "Hapus ODP?",
@@ -968,7 +1063,7 @@ function odpApp() {
         CustomSwal.fire("Terhapus!", "Data telah dihapus.", "success");
       }
     },
-
+    // Fungsi Export ke Excel menggunakan SheetJS
     exportToExcel() {
       const ws = XLSX.utils.json_to_sheet(this.odps);
       const wb = XLSX.utils.book_new();
@@ -1003,7 +1098,7 @@ function odpApp() {
       XLSX.utils.book_append_sheet(wb, ws, "Template");
       XLSX.writeFile(wb, "template_import_odp.xlsx");
     },
-
+    // Fungsi Import dari Excel menggunakan SheetJS
     async importFromExcel(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1063,6 +1158,63 @@ function odpApp() {
         }
       };
       reader.readAsArrayBuffer(file);
+    },
+
+    // Fungsi Logout
+    async doLogout(showAlert = true) {
+      if (showAlert) {
+        await CustomSwal.fire({
+          icon: "success",
+          title: "Logout Berhasil",
+          text: "Anda telah keluar dari sistem",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      }
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("username");
+
+      window.location.href = "/login.html";
+    },
+
+    // Fungsi Auto-Logout karena Idle
+    startIdleTimer() {
+      this.resetIdleTimer();
+
+      const events = [
+        "mousemove",
+        "mousedown",
+        "click",
+        "scroll",
+        "keypress",
+        "touchstart",
+      ];
+
+      events.forEach((event) => {
+        window.addEventListener(event, () => {
+          this.resetIdleTimer();
+        });
+      });
+    },
+    // Fungsi untuk mereset timer idle (dipanggil setiap ada aktivitas)
+    resetIdleTimer() {
+      clearTimeout(this.idleTimer);
+
+      this.idleTimer = setTimeout(() => {
+        CustomSwal.fire({
+          icon: "warning",
+          title: "Session Expired",
+          text: "Anda logout otomatis karena tidak ada aktivitas.",
+          timer: 2500,
+          showConfirmButton: false,
+        });
+
+        setTimeout(() => {
+          this.doLogout(false);
+        }, 2500);
+      }, this.idleLimit);
     },
   };
 }

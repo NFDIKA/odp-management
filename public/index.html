@@ -23,7 +23,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="script.js"></script>
   </head>
-  <body x-data="odpApp()" x-init="fetchData()">
+  <body x-data="odpApp()" x-init="fetchData(); startIdleTimer();">
     <nav
       class="glass-nav"
       style="
@@ -140,7 +140,9 @@
             🔍 Coverage
           </button>
 
-          <template x-if="currentUsername === 'admin' && userRole === 'full'">
+          <template
+            x-if="currentUsername === 'admin' || currentUsername === 'aoe' || userOrganisasi === 'admin' && userRole === 'full'"
+          >
             <button
               @click="openUserModal(); fetchUsers()"
               class="btn"
@@ -223,6 +225,21 @@
             ></div>
           </div>
 
+          <button
+            @click="changePasswordModal = true"
+            class="btn"
+            style="
+              background: rgba(59, 130, 246, 0.1);
+              color: #2563eb;
+              border: 1px solid rgba(59, 130, 246, 0.2);
+              font-weight: 700;
+              padding: 0.5rem 0.8rem;
+              border-radius: 8px;
+              font-size: 0.8rem;
+            "
+          >
+            🔒 Password
+          </button>
           <button
             @click="doLogout()"
             class="btn"
@@ -881,6 +898,7 @@
       </div>
     </div>
 
+    <!-- USER MODAL -->
     <div
       x-show="modalOpen"
       x-cloak
@@ -1055,7 +1073,7 @@
         </div>
       </div>
     </div>
-
+    <!-- CABUT MODAL -->
     <div
       x-show="cabutModal"
       x-cloak
@@ -1096,7 +1114,7 @@
         </div>
       </div>
     </div>
-
+    <!-- VIEW MODAL -->
     <div
       x-show="viewOpen"
       x-cloak
@@ -1383,7 +1401,7 @@
         </div>
       </div>
     </div>
-
+    <!-- COVERAGE MODAL -->
     <div
       x-show="coverageModal"
       x-cloak
@@ -1563,7 +1581,7 @@
         </div>
       </div>
     </div>
-
+    <!-- USER MODAL -->
     <div
       x-show="userModal"
       x-cloak
@@ -1572,11 +1590,15 @@
       @keydown.escape.window="userModal = false"
     >
       <div class="user-modal-content">
+        <!-- HEADER -->
         <div class="form-modal-header">
           <div>
             <h2 class="form-title">👥 User Access Management</h2>
-            <p class="form-subtitle">Kelola user, role, dan akses sistem</p>
+            <p class="form-subtitle">
+              Kelola akun user, role, dan hak akses sistem
+            </p>
           </div>
+
           <button
             type="button"
             @click="userModal = false"
@@ -1587,54 +1609,140 @@
         </div>
 
         <div class="form-body">
+          <!-- FORM SECTION -->
           <div class="form-section">
             <div class="section-header">
               <h3
-                x-text="isEditUser ? '📝 Edit Akun' : '➕ Tambah Akun Baru'"
+                x-text="isEditUser ? '📝 Edit Akun User' : '➕ Tambah User Baru'"
               ></h3>
+
               <span class="section-badge">FORM USER</span>
             </div>
 
             <div class="form-grid">
+              <!-- USERNAME -->
               <div class="form-group">
                 <label>USERNAME</label>
+
                 <input
                   type="text"
                   x-model="userForm.username"
                   :disabled="isEditUser"
-                  :style="isEditUser ? 'background: #334155; cursor: not-allowed;' : ''"
-                  placeholder="Username"
+                  :style="isEditUser 
+                ? 'background:#334155; cursor:not-allowed; opacity:.8;' 
+                : ''"
+                  placeholder="Masukkan username"
                 />
               </div>
 
+              <!-- PASSWORD -->
               <div class="form-group">
                 <label>PASSWORD</label>
-                <input
-                  type="password"
-                  x-model="userForm.password"
-                  :placeholder="isEditUser ? 'Kosongkan jika tidak diubah' : 'Password'"
-                />
+
+                <div style="position: relative">
+                  <input
+                    :type="showUserPassword ? 'text' : 'password'"
+                    x-model="userForm.password"
+                    :placeholder="isEditUser 
+                  ? 'Kosongkan jika tidak diubah' 
+                  : 'Masukkan password'"
+                    style="padding-right: 45px"
+                  />
+
+                  <button
+                    type="button"
+                    @click="showUserPassword = !showUserPassword"
+                    style="
+                      position: absolute;
+                      right: 12px;
+                      top: 50%;
+                      transform: translateY(-50%);
+                      background: none;
+                      border: none;
+                      cursor: pointer;
+                      color: #64748b;
+                    "
+                  >
+                    <!-- EYE OPEN -->
+                    <svg
+                      x-show="!showUserPassword"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5
+                    c4.477 0 8.268 2.943 9.542 7
+                    -1.274 4.057-5.065 7-9.542 7
+                    -4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+
+                    <!-- EYE OFF -->
+                    <svg
+                      x-show="showUserPassword"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 19
+                    c-4.478 0-8.268-2.943-9.543-7
+                    a9.97 9.97 0 012.223-3.592
+                    m3.1-2.438A9.956 9.956 0 0112 5
+                    c4.478 0 8.268 2.943 9.543 7
+                    a9.978 9.978 0 01-4.132 5.411
+                    M15 12a3 3 0 00-4.243-4.243
+                    M3 3l18 18"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
+              <!-- NAMA -->
               <div class="form-group">
                 <label>NAMA LENGKAP</label>
+
                 <input
                   type="text"
                   x-model="userForm.nama"
-                  placeholder="Nama Lengkap"
+                  placeholder="Masukkan nama lengkap"
                 />
               </div>
 
+              <!-- ROLE -->
               <div class="form-group">
-                <label>ROLE</label>
+                <label>ROLE / AKSES</label>
+
                 <select x-model="userForm.role">
                   <option value="read">READ ONLY</option>
                   <option value="full">FULL ACCESS</option>
                 </select>
               </div>
 
-              <div class="form-group">
-                <label>UNIT</label>
+              <!-- UNIT -->
+              <div class="form-group full-width">
+                <label>UNIT / ORGANISASI</label>
+
                 <select x-model="userForm.organisasi">
                   <option value="">Pilih Unit</option>
                   <option value="admin">Admin</option>
@@ -1643,19 +1751,23 @@
                 </select>
               </div>
 
+              <!-- BUTTON -->
               <div class="form-group full-width">
                 <button
                   @click="addUser()"
                   class="btn-submit-modern"
-                  x-text="isEditUser ? 'UPDATE USER' : 'SIMPAN USER'"
+                  x-text="isEditUser 
+                ? 'UPDATE USER' 
+                : 'SIMPAN USER'"
                 ></button>
               </div>
             </div>
           </div>
 
+          <!-- TABLE SECTION -->
           <div class="table-section">
             <div class="section-header">
-              <h3>LIST USER</h3>
+              <h3>📋 LIST USER</h3>
               <span class="section-badge">DATABASE</span>
             </div>
 
@@ -1665,60 +1777,357 @@
                   <tr>
                     <th>USERNAME</th>
                     <th>NAMA</th>
-                    <th>PRIVILEGE</th>
+                    <th>ROLE</th>
                     <th>UNIT</th>
                     <th style="text-align: center">AKSI</th>
                   </tr>
                 </thead>
+
                 <tbody>
                   <template x-for="user in users" :key="user.id">
                     <tr>
                       <td class="text-bold" x-text="user.username"></td>
+
                       <td x-text="user.nama"></td>
+
                       <td>
                         <span
                           class="badge"
-                          :class="user.role === 'full' ? 'badge-success' : 'badge-info'"
+                          :class="user.role === 'full' 
+                        ? 'badge-success' 
+                        : 'badge-info'"
                           x-text="user.role"
                         ></span>
                       </td>
+
                       <td x-text="user.organisasi"></td>
-                      <td
-                        style="
-                          text-align: center;
-                          display: flex;
-                          gap: 8px;
-                          justify-content: center;
-                        "
-                      >
-                        <button
-                          @click="editUser(user)"
-                          class="btn-info-small"
+
+                      <td>
+                        <div
                           style="
-                            background: #0ea5e9;
-                            color: white;
-                            border: none;
-                            padding: 4px 8px;
-                            border-radius: 4px;
-                            cursor: pointer;
-                            font-size: 10px;
+                            display: flex;
+                            justify-content: center;
+                            gap: 8px;
                           "
                         >
-                          EDIT
-                        </button>
+                          <button
+                            @click="editUser(user)"
+                            class="btn-info-small"
+                            style="
+                              background: #0ea5e9;
+                              color: white;
+                              border: none;
+                              padding: 6px 12px;
+                              border-radius: 6px;
+                              cursor: pointer;
+                              font-size: 11px;
+                              font-weight: 700;
+                            "
+                          >
+                            EDIT
+                          </button>
 
-                        <button
-                          x-show="user.username !== 'admin'"
-                          @click="deleteUser(user.id, user.username)"
-                          class="btn-danger-small"
-                        >
-                          HAPUS
-                        </button>
+                          <button
+                            x-show="user.username !== 'admin'"
+                            @click="deleteUser(user.id, user.username)"
+                            class="btn-danger-small"
+                          >
+                            HAPUS
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   </template>
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- CHANGE PASSWORD MODAL -->
+    <div
+      x-show="changePasswordModal"
+      x-cloak
+      class="user-modal-overlay"
+      @click.self="changePasswordModal = false"
+      @keydown.escape.window="changePasswordModal = false"
+    >
+      <div class="user-modal-content" style="max-width: 500px">
+        <div class="form-modal-header">
+          <div>
+            <h2 class="form-title">🔐 Ganti Password</h2>
+            <p class="form-subtitle">
+              Ubah password akun untuk keamanan sistem
+            </p>
+          </div>
+
+          <button
+            type="button"
+            @click="changePasswordModal = false"
+            class="modal-close-btn"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div class="form-body">
+          <div class="form-section">
+            <div class="section-header">
+              <h3>FORM PASSWORD</h3>
+              <span class="section-badge">SECURITY</span>
+            </div>
+
+            <div class="form-grid">
+              <!-- PASSWORD LAMA -->
+              <div class="form-group full-width">
+                <label>PASSWORD LAMA</label>
+
+                <div style="position: relative">
+                  <input
+                    :type="showOldPassword ? 'text' : 'password'"
+                    x-model="passwordForm.oldPassword"
+                    placeholder="Masukkan password lama"
+                    style="padding-right: 45px"
+                  />
+
+                  <button
+                    type="button"
+                    @click="showOldPassword = !showOldPassword"
+                    style="
+                      position: absolute;
+                      right: 12px;
+                      top: 50%;
+                      transform: translateY(-50%);
+                      background: none;
+                      border: none;
+                      cursor: pointer;
+                      color: #64748b;
+                    "
+                  >
+                    <!-- EYE OPEN -->
+                    <svg
+                      x-show="!showOldPassword"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5
+                    c4.477 0 8.268 2.943 9.542 7
+                    -1.274 4.057-5.065 7-9.542 7
+                    -4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+
+                    <!-- EYE OFF -->
+                    <svg
+                      x-show="showOldPassword"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 19
+                    c-4.478 0-8.268-2.943-9.543-7
+                    a9.97 9.97 0 012.223-3.592
+                    m3.1-2.438A9.956 9.956 0 0112 5
+                    c4.478 0 8.268 2.943 9.543 7
+                    a9.978 9.978 0 01-4.132 5.411
+                    M15 12a3 3 0 00-4.243-4.243
+                    M3 3l18 18"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- PASSWORD BARU -->
+              <div class="form-group full-width">
+                <label>PASSWORD BARU</label>
+
+                <div style="position: relative">
+                  <input
+                    :type="showNewPassword ? 'text' : 'password'"
+                    x-model="passwordForm.newPassword"
+                    placeholder="Masukkan password baru"
+                    style="padding-right: 45px"
+                  />
+
+                  <button
+                    type="button"
+                    @click="showNewPassword = !showNewPassword"
+                    style="
+                      position: absolute;
+                      right: 12px;
+                      top: 50%;
+                      transform: translateY(-50%);
+                      background: none;
+                      border: none;
+                      cursor: pointer;
+                      color: #64748b;
+                    "
+                  >
+                    <!-- EYE OPEN -->
+                    <svg
+                      x-show="!showNewPassword"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5
+                    c4.477 0 8.268 2.943 9.542 7
+                    -1.274 4.057-5.065 7-9.542 7
+                    -4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+
+                    <!-- EYE OFF -->
+                    <svg
+                      x-show="showNewPassword"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 19
+                    c-4.478 0-8.268-2.943-9.543-7
+                    a9.97 9.97 0 012.223-3.592
+                    m3.1-2.438A9.956 9.956 0 0112 5
+                    c4.478 0 8.268 2.943 9.543 7
+                    a9.978 9.978 0 01-4.132 5.411
+                    M15 12a3 3 0 00-4.243-4.243
+                    M3 3l18 18"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- KONFIRMASI PASSWORD -->
+              <div class="form-group full-width">
+                <label>KONFIRMASI PASSWORD</label>
+
+                <div style="position: relative">
+                  <input
+                    :type="showConfirmPassword ? 'text' : 'password'"
+                    x-model="passwordForm.confirmPassword"
+                    placeholder="Ulangi password baru"
+                    style="padding-right: 45px"
+                  />
+
+                  <button
+                    type="button"
+                    @click="showConfirmPassword = !showConfirmPassword"
+                    style="
+                      position: absolute;
+                      right: 12px;
+                      top: 50%;
+                      transform: translateY(-50%);
+                      background: none;
+                      border: none;
+                      cursor: pointer;
+                      color: #64748b;
+                    "
+                  >
+                    <!-- EYE OPEN -->
+                    <svg
+                      x-show="!showConfirmPassword"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5
+                    c4.477 0 8.268 2.943 9.542 7
+                    -1.274 4.057-5.065 7-9.542 7
+                    -4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+
+                    <!-- EYE OFF -->
+                    <svg
+                      x-show="showConfirmPassword"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 19
+                    c-4.478 0-8.268-2.943-9.543-7
+                    a9.97 9.97 0 012.223-3.592
+                    m3.1-2.438A9.956 9.956 0 0112 5
+                    c4.478 0 8.268 2.943 9.543 7
+                    a9.978 9.978 0 01-4.132 5.411
+                    M15 12a3 3 0 00-4.243-4.243
+                    M3 3l18 18"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- BUTTON -->
+              <div class="form-group full-width">
+                <button @click="changePassword()" class="btn-submit-modern">
+                  SIMPAN PASSWORD
+                </button>
+              </div>
             </div>
           </div>
         </div>

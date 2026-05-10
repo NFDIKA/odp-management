@@ -72,6 +72,82 @@ const authenticate = (req, res, next) => {
   }
 };
 
+// CHANGE PASSWORD
+app.put("/api/change-password", authenticate, async (req, res) => {
+  try {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+
+    // VALIDASI
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({
+        message: "Semua field password wajib diisi",
+      });
+    }
+
+    // PASSWORD TIDAK COCOK
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        message: "Konfirmasi password tidak cocok",
+      });
+    }
+
+    // MINIMAL PASSWORD
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        message: "Password minimal 6 karakter",
+      });
+    }
+
+    // AMBIL DATABASE USER
+    const users = JSON.parse(fs.readFileSync(USER_DB, "utf-8"));
+
+    // CARI USER LOGIN
+    const index = users.findIndex((u) => u.username === req.user.username);
+
+    if (index === -1) {
+      return res.status(404).json({
+        message: "User tidak ditemukan",
+      });
+    }
+
+    const user = users[index];
+
+    // CEK PASSWORD LAMA
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Password lama salah",
+      });
+    }
+
+    // HASH PASSWORD BARU
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // UPDATE PASSWORD
+    users[index].password = hashedPassword;
+
+    // SIMPAN DATABASE
+    fs.writeFileSync(USER_DB, JSON.stringify(users, null, 2));
+
+    // LOG
+    writeLog("CHANGE_PASSWORD", req.user.nama, `Mengganti password akun`);
+
+    // RESPONSE
+    res.json({
+      success: true,
+      message: "Password berhasil diubah",
+    });
+  } catch (error) {
+    console.error("CHANGE PASSWORD ERROR:", error);
+
+    res.status(500).json({
+      message: "Gagal mengganti password",
+      error: error.message,
+    });
+  }
+});
+
 // UPDATE USER
 app.put("/api/admin/users/:id", authenticate, async (req, res) => {
   // Hanya super admin
@@ -441,7 +517,9 @@ app.post("/api/odp/import-bulk", authenticate, (req, res) => {
       id: item.id || Date.now() + Math.random(),
       ...item,
       created_by: req.user.nama,
-      created_at: item.createdAt || new Date().toISOString(),
+      created_at: new Date().toLocaleString("id-ID", {
+        timeZone: "Asia/Jakarta",
+      }),
     }));
 
     const finalData = [...dbData, ...formattedData];

@@ -1,18 +1,1 @@
-[
-  {
-    "id": 1,
-    "username": "admin",
-    "password": "$2b$10$Z8E2nupgxMcv2/uxE8jF8eoOT.psCcpCSy4BW69s9F1QGgl/m7wkG",
-    "nama": "Super Admin",
-    "role": "full",
-    "organisasi": "Admin"
-  },
-  {
-    "id": 1778387263534,
-    "username": "AAA",
-    "password": "$2b$10$bhQhZV2CL1IAppuBVE4EmO3wgm0tJAhsmMR.MJckQK/hEKsRqkL2m",
-    "nama": "CCC",
-    "organisasi": "admin",
-    "role": "full"
-  }
-]
+[]
