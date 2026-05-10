@@ -23,6 +23,9 @@ const CustomSwal = Swal.mixin({
 
 function odpApp() {
   return {
+    // STATE DATA SORTING
+    sortKey: "",
+    sortAsc: true,
     // --- STATE DATA USER & ADMIN ---
     userModal: false,
     isEditUser: false, // Menandai apakah sedang mode EDIT atau TAMBAH
@@ -322,6 +325,17 @@ function odpApp() {
       this.searchQuery = "";
       this.currentPage = 1;
     },
+
+    sortBy(key) {
+      if (this.sortKey === key) {
+        this.sortAsc = !this.sortAsc;
+      } else {
+        this.sortKey = key;
+        this.sortAsc = true;
+      }
+
+      this.currentPage = 1;
+    },
     // --- FUNGSI CABUT LAYANAN ---
     // Di dalam return { ... } odpApp
     async findAndConfirmCabut() {
@@ -545,9 +559,10 @@ function odpApp() {
     get filteredOdps() {
       if (!this.odps) return [];
 
-      return this.odps.filter((item) => {
-        // Normalisasi pencarian (Search Query)
+      let data = this.odps.filter((item) => {
+        // SEARCH
         const s = this.searchQuery.toLowerCase().trim();
+
         const nama = (item.nama || "").toLowerCase();
 
         const searchMatch =
@@ -557,28 +572,83 @@ function odpApp() {
             (p) => (item[p] || "").toString().toLowerCase().includes(s),
           );
 
-        // Normalisasi Filter Dropdown (PENTING: Gunakan String() untuk membandingkan)
+        // FILTER AREA
         const areaMatch =
           !this.filterArea || String(item.area) === String(this.filterArea);
+
+        // FILTER CLUSTER
         const clusterMatch =
           !this.filterCluster ||
           String(item.cluster) === String(this.filterCluster);
 
-        // Tambahkan filter status jika Anda menggunakannya
+        // FILTER STATUS
         const utilization = this.getUtilization(item);
-        let statusMatch = true;
-        if (this.filterStatus === "Available") statusMatch = utilization < 75;
-        if (this.filterStatus === "Critical")
-          statusMatch = utilization >= 75 && utilization < 100;
-        if (this.filterStatus === "Full") statusMatch = utilization === 100;
 
+        let statusMatch = true;
+
+        if (this.filterStatus === "Available") {
+          statusMatch = utilization < 75;
+        }
+
+        if (this.filterStatus === "Critical") {
+          statusMatch = utilization >= 75 && utilization < 100;
+        }
+
+        if (this.filterStatus === "Full") {
+          statusMatch = utilization === 100;
+        }
+
+        // FILTER KOTA
         const matchesKota =
-          this.filterKota === "" || item.kota === this.filterKota; // Tambahkan ini
+          this.filterKota === "" || item.kota === this.filterKota;
 
         return (
           searchMatch && areaMatch && clusterMatch && statusMatch && matchesKota
-        ); // Sertakan matchesKota dalam kondisi return
+        );
       });
+
+      // =========================
+      // SORTING
+      // =========================
+
+      if (this.sortKey) {
+        data.sort((a, b) => {
+          let aVal;
+          let bVal;
+
+          // SPECIAL UTILIZATION
+          if (this.sortKey === "utilization") {
+            aVal = this.getUtilization(a);
+            bVal = this.getUtilization(b);
+          } else {
+            aVal = a[this.sortKey];
+            bVal = b[this.sortKey];
+          }
+
+          // HANDLE NULL
+          if (aVal == null) aVal = "";
+          if (bVal == null) bVal = "";
+
+          // STRING NORMALIZATION
+          if (typeof aVal === "string") {
+            aVal = aVal.toLowerCase();
+            bVal = bVal.toLowerCase();
+          }
+
+          // SORT ASC / DESC
+          if (aVal > bVal) {
+            return this.sortAsc ? 1 : -1;
+          }
+
+          if (aVal < bVal) {
+            return this.sortAsc ? -1 : 1;
+          }
+
+          return 0;
+        });
+      }
+
+      return data;
     },
 
     // --- LOGIKA PAGINASI ---

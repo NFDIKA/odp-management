@@ -331,7 +331,9 @@ app.post("/api/odp", authenticate, (req, res) => {
       id: Date.now(),
       ...req.body,
       created_by: req.user.nama,
-      created_at: new Date().toISOString(),
+      created_at: new Date().toLocaleString("id-ID", {
+        timeZone: "Asia/Jakarta",
+      }),
     };
 
     data.push(newOdp);
@@ -356,7 +358,9 @@ app.put("/api/odp/:id", authenticate, (req, res) => {
         ...data[index],
         ...req.body,
         updated_by: req.user.nama,
-        updated_at: new Date().toISOString(),
+        updated_at: new Date().toLocaleString("id-ID", {
+          timeZone: "Asia/Jakarta",
+        }),
       };
       fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
       writeLog(

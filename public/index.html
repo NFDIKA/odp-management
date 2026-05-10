@@ -526,12 +526,73 @@
         <div class="table-container">
           <table class="odp-table">
             <thead>
-              <tr>
-                <th>Identity</th>
-                <th>Area / Cluster</th>
+              <tr class="table-head-row">
+                <th @click="sortBy('nama')" class="sortable">
+                  <div class="th-content">
+                    <span>Identity</span>
+
+                    <span class="sort-icon">
+                      <template x-if="sortKey === 'nama'">
+                        <span x-text="sortAsc ? '▲' : '▼'"></span>
+                      </template>
+
+                      <template x-if="sortKey !== 'nama'">
+                        <span>⇅</span>
+                      </template>
+                    </span>
+                  </div>
+                </th>
+
+                <th @click="sortBy('area')" class="sortable">
+                  <div class="th-content">
+                    <span>Area / Cluster</span>
+
+                    <span class="sort-icon">
+                      <template x-if="sortKey === 'area'">
+                        <span x-text="sortAsc ? '▲' : '▼'"></span>
+                      </template>
+
+                      <template x-if="sortKey !== 'area'">
+                        <span>⇅</span>
+                      </template>
+                    </span>
+                  </div>
+                </th>
+
                 <th style="text-align: center">In Status</th>
-                <th style="text-align: center">Out Status</th>
-                <th style="text-align: center">Last Updated</th>
+
+                <th @click="sortBy('utilization')" class="sortable">
+                  <div class="th-content">
+                    <span>Out Status</span>
+
+                    <span class="sort-icon">
+                      <template x-if="sortKey === 'utilization'">
+                        <span x-text="sortAsc ? '▲' : '▼'"></span>
+                      </template>
+
+                      <template x-if="sortKey !== 'utilization'">
+                        <span>⇅</span>
+                      </template>
+                    </span>
+                  </div>
+                </th>
+
+                <th @click="sortBy('updated_at')" class="sortable">
+                  <div class="th-content">
+                    <span>Last Updated</span>
+
+                    <span class="sort-icon">
+                      <template x-if="sortKey === 'updated_at'">
+                        <span x-text="sortAsc ? '▲' : '▼'"></span>
+                      </template>
+
+                      <template x-if="sortKey !== 'updated_at'">
+                        <span>⇅</span>
+                      </template>
+                    </span>
+                  </div>
+                </th>
+
                 <th style="text-align: center">Action</th>
               </tr>
             </thead>

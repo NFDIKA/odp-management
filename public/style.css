@@ -383,6 +383,72 @@ textarea:focus {
 }
 
 /* =========================
+   SORTABLE TABLE HEADER
+========================= */
+
+.table-head-row th.sortable {
+  cursor: pointer;
+
+  user-select: none;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.table-head-row th.sortable:hover {
+  background: rgba(226, 232, 240, 0.9);
+
+  color: #0f172a;
+}
+
+/* CONTENT INSIDE HEADER */
+
+.th-content {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 8px;
+
+  width: 100%;
+}
+
+/* SORT ICON */
+
+.sort-icon {
+  font-size: 10px;
+
+  color: #94a3b8;
+
+  transition: all 0.2s ease;
+
+  min-width: 12px;
+
+  text-align: center;
+}
+
+.table-head-row th.sortable:hover .sort-icon {
+  color: #3b82f6;
+}
+
+/* ACTIVE SORT */
+
+.table-head-row th.sortable.active-sort {
+  background: rgba(219, 234, 254, 0.65);
+
+  color: #1d4ed8;
+}
+
+/* OPTIONAL: HEADER SHADOW */
+
+.odp-table thead {
+  box-shadow: 0 1px 0 rgba(226, 232, 240, 0.8);
+}
+
+/* =========================
    STATUS ROW
 ========================= */
 
