@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "timestamp": "2026-05-10T14:28:59.808Z",
+    "action": "IMPORT_EXCEL",
+    "user": "Super Admin",
+    "detail": "Import bulk 49 data"
+  }
+]
