@@ -63,6 +63,14 @@ function odpApp() {
     idleTimer: null,
 
     idleLimit: 15 * 60 * 1000, // 15 menit
+    // State untuk modal gambar ODP
+    showOdpImageModal: false,
+    imgScale: 1,
+    posX: 0,
+    posY: 0,
+    isDragging: false,
+    startX: 0,
+    startY: 0,
 
     // Fungsi change password
     async changePassword() {
@@ -141,6 +149,38 @@ function odpApp() {
 
         CustomSwal.fire("Error", "Gagal menghubungi server", "error");
       }
+    },
+
+    // Fungsi pembantu untuk reset zoom saat modal ditutup
+    closeImageModal() {
+      this.showOdpImageModal = false;
+      // Reset semua posisi saat modal ditutup
+      this.imgScale = 1;
+      this.posX = 0;
+      this.posY = 0;
+    },
+
+    // Logika Klik & Tahan
+    handleMouseDown(e) {
+      if (this.imgScale > 1) {
+        this.isDragging = true;
+        // Hitung selisih posisi mouse dengan posisi gambar saat ini
+        this.startX = e.clientX - this.posX;
+        this.startY = e.clientY - this.posY;
+      }
+    },
+
+    // Logika Geser
+    handleMouseMove(e) {
+      if (this.isDragging) {
+        this.posX = e.clientX - this.startX;
+        this.posY = e.clientY - this.startY;
+      }
+    },
+
+    // Logika Lepas Klik
+    handleMouseUp() {
+      this.isDragging = false;
     },
 
     // Fungsi Membuka Modal Tambah (Reset Form)

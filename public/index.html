@@ -177,6 +177,22 @@
               </button>
 
               <button
+                @click="showOdpImageModal = true"
+                style="
+                  background: #0ea5e9;
+                  color: white;
+                  border: none;
+                  padding: 8px 12px;
+                  border-radius: 8px;
+                  cursor: pointer;
+                  font-size: 12px;
+                  font-weight: 600;
+                "
+              >
+                📷 ODP Standard
+              </button>
+
+              <button
                 @click="openModal()"
                 class="btn btn-primary"
                 style="
@@ -2130,6 +2146,154 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ODP IMAGE MODAL -->
+    <div
+      x-show="showOdpImageModal"
+      x-cloak
+      class="user-modal-overlay"
+      @click.self="closeImageModal()"
+      @keydown.escape.window="closeImageModal()"
+      @mousemove="handleMouseMove($event)"
+      @mouseup="handleMouseUp()"
+      @mouseleave="handleMouseUp()"
+    >
+      <div
+        class="user-modal-content"
+        style="
+          max-width: 90%;
+          width: 1000px;
+          height: 85vh;
+          display: flex;
+          flex-direction: column;
+          background: #1e293b;
+          border: 1px solid #334155;
+          overflow: hidden;
+          user-select: none;
+        "
+      >
+        <div
+          class="form-modal-header"
+          style="
+            z-index: 100;
+            background: #1e293b;
+            padding: 1rem;
+            border-bottom: 1px solid #334155;
+          "
+        >
+          <div>
+            <h2 class="form-title" style="margin: 0">
+              📡 Standarisasi Port ODP
+            </h2>
+            <p class="form-subtitle" style="margin: 4px 0 0 0">
+              Scroll untuk Zoom • Klik & Tarik untuk Geser
+            </p>
+          </div>
+          <button
+            type="button"
+            @click="closeImageModal()"
+            class="modal-close-btn"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div
+          style="
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          "
+          @wheel.prevent="imgScale = Math.min(Math.max(1, imgScale + ($event.deltaY < 0 ? 0.2 : -0.2)), 5); if(imgScale === 1) { posX = 0; posY = 0; }"
+          @mousedown="handleMouseDown($event)"
+        >
+          <img
+            src="/img/standarisasi_odp.jpg"
+            alt="Standarisasi ODP"
+            draggable="false"
+            :style="`
+          transform: translate(${posX}px, ${posY}px) scale(${imgScale}); 
+          transition: ${isDragging ? 'none' : 'transform 0.1s ease-out'};
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+          cursor: ${imgScale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'};
+          border-radius: 4px;
+        `"
+          />
+        </div>
+
+        <div
+          style="
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 110;
+            display: flex;
+            gap: 12px;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid #475569;
+            align-items: center;
+          "
+        >
+          <button
+            @click="imgScale = Math.max(1, imgScale - 0.5); if(imgScale === 1) { posX=0; posY=0; }"
+            style="
+              color: white;
+              background: none;
+              border: none;
+              cursor: pointer;
+              font-size: 16px;
+            "
+          >
+            ➖
+          </button>
+          <span
+            x-text="Math.round(imgScale * 100) + '%'"
+            style="
+              color: white;
+              font-size: 12px;
+              font-weight: bold;
+              min-width: 40px;
+              text-align: center;
+            "
+          ></span>
+          <button
+            @click="imgScale = Math.min(5, imgScale + 0.5)"
+            style="
+              color: white;
+              background: none;
+              border: none;
+              cursor: pointer;
+              font-size: 16px;
+            "
+          >
+            ➕
+          </button>
+          <div style="width: 1px; height: 15px; background: #475569"></div>
+          <button
+            @click="imgScale = 1; posX = 0; posY = 0;"
+            style="
+              color: #3b82f6;
+              background: none;
+              border: none;
+              cursor: pointer;
+              font-size: 10px;
+              font-weight: bold;
+            "
+          >
+            RESET
+          </button>
         </div>
       </div>
     </div>

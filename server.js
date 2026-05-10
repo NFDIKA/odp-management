@@ -35,6 +35,7 @@ app.use(express.json()); // Penting agar req.body tidak undefined
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static("public"));
+app.use("/img", express.static(path.join(__dirname, "img"))); // Tambahkan ini jika folder img di luar public
 
 // Helper: Catat Log Aktivitas
 const writeLog = (action, user, detail) => {
